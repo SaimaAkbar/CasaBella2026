@@ -1,0 +1,109 @@
+.daily-guests-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  margin-bottom: 0.9rem;
+}
+
+.daily-guests-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.55rem;
+}
+
+.daily-guests-page__tab-hint {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.daily-guests-page__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--gold-bright) 28%, #fff);
+  color: #222;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.daily-guests-page__notice-dismiss {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text-muted);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.daily-guests-page__tab {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-muted);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.daily-guests-page__tab.is-active {
+  color: #111;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border-color: var(--gold);
+}
+
+.daily-guests-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.daily-guests-page__remaining.is-due {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.daily-guests-page__when {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 7.5rem;
+  line-height: 1.25;
+}
+
+.daily-guests-page__when-time {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.daily-guests-page__when-date {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.daily-guests-page__when-actual {
+  color: var(--gold-deep);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.data-table td.daily-guests-page__col-when {
+  white-space: normal;
+  vertical-align: top;
+}

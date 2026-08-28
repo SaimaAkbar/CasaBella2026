@@ -1,0 +1,420 @@
+<open_subagent_context>
+agent_id=3f62b267-4424-4d17-a13c-1e5ade7d1675
+agent_name=Fix unit-grid today validation
+</open_subagent_context>
+<timestamp>Wednesday, Aug 5, 2026, 11:07 PM (UTC+5)</timestamp>
+<user_query>
+Act as a senior NestJS, Prisma, PostgreSQL, React and TypeScript developer.
+
+Implement the special workflow that allows the hotel to place its own guest in an empty unit assigned to a monthly tenant.
+
+Review the existing MonthlyTenant, MonthlyTenancy, Unit, Booking, Payment and Dashboard models before changing anything.
+
+Do not duplicate existing entities unnecessarily.
+
+BUSINESS RULE
+
+A monthly tenant may have one or more assigned rooms/apartments and must pay monthly rent to the organization.
+
+If one of the tenant's assigned units is currently empty, and the agreement permits hotel use, management may temporarily place a hotel guest in that unit.
+
+The monthly tenancy must remain active.
+
+The hotel guest booking must be recorded separately.
+
+The tenant and organization may agree on a fixed, percentage-based, rent-credit or custom financial settlement.
+
+==================================================
+1. TENANT UNIT ASSIGNMENT
+==================================================
+
+Ensure that one tenant may have multiple active or historical unit assignments.
+
+Each assignment must contain:
+
+- tenantId
+- unitId
+- monthlyRent
+- agreementStart
+- agreementEnd optional
+- occupancyState: OCCUPIED or EMPTY
+- hotelUseAllowed
+- assignmentStatus: ACTIVE, ENDED or CANCELLED
+- notes
+- createdAt
+- updatedAt
+
+Do not store only one unitId directly on the tenant profile.
+
+==================================================
+2. TEMPORARY HOTEL USE MODEL
+==================================================
+
+Create or adapt a model named TenantUnitHotelUse.
+
+Fields:
+
+- id UUID
+- tenantUnitAssignmentId
+- bookingId unique
+- settlementType
+- totalGuestCharge Decimal
+- tenantShare Decimal
+- organizationShare Decimal
+- rentCreditAmount Decimal default 0
+- status
+- reason optional
+- approvedByUserId
+- createdAt
+- updatedAt
+
+SettlementType enum:
+
+- FIXED_AMOUNT
+- PERCENTAGE
+- NO_TENANT_SHARE
+- RENT_CREDIT
+- CUSTOM
+
+SettlementStatus enum:
+
+- DRAFT
+- APPROVED
+- SETTLED
+- CANCELLED
+
+Relations:
+
+- belongs to tenant unit assignment
+- belongs to booking
+- belongs to approving user
+
+==================================================
+3. ELIGIBILITY RULES
+==================================================
+
+Hotel-use booking is allowed only when:
+
+- assignment status is ACTIVE
+- tenancy is ACTIVE
+- occupancyState is EMPTY
+- hotelUseAllowed is true
+- unit is active
+- unit is not BLOCKED
+- unit is not MAINTENANCE
+- no overlapping active booking exists
+- no tenant customer is currently occupying the unit
+
+Return HTTP 409 with a clear message when a rule fails.
+
+Create one centralized availability service.
+
+Do not repeat availability logic across controllers.
+
+==================================================
+4. SETTLEMENT CALCULATION
+==================================================
+
+FIXED_AMOUNT:
+
+- tenantShare entered explicitly
+- organizationShare = totalGuestCharge - tenantShare
+
+PERCENTAGE:
+
+- tenantSharePercentage and organizationSharePercentage must total 100
+- calculate both shares in backend
+
+NO_TENANT_SHARE:
+
+- tenantShare = 0
+- organizationShare = totalGuestCharge
+
+RENT_CREDIT:
+
+- calculate tenant share
+- store it as rentCreditAmount
+- apply it to tenant rent only after settlement approval
+- preserve a separate credit transaction/history
+
+CUSTOM:
+
+- Super Admin only
+- require mandatory reason
+- tenantShare + organizationShare must equal totalGuestCharge
+
+Do not trust frontend-calculated totals.
+
+Use Decimal-safe calculations.
+
+==================================================
+5. APIS
+==================================================
+
+Create or improve:
+
+GET /tenant-unit-assignments/eligible-for-hotel-use
+
+POST /tenant-unit-hotel-use
+
+GET /tenant-unit-hotel-use
+
+GET /tenant-unit-hotel-use/:id
+
+POST /tenant-unit-hotel-use/:id/approve
+
+POST /tenant-unit-hotel-use/:id/cancel
+
+POST /tenant-unit-hotel-use/:id/settle
+
+GET /tenant-unit-hotel-use/:id/settlement
+
+Filters:
+
+- tenantId
+- propertyId
+- unitId
+- status
+- date
+- month
+- year
+
+Only Super Admin and authorized Admin may create or approve hotel-use settlements.
+
+Receptionist may create/check in the related booking only after an approved settlement exists.
+
+==================================================
+6. BOOKING INTEGRATION
+==================================================
+
+Add or use an occupancy source on Booking:
+
+- NORMAL_HOTEL_UNIT
+- HOTEL_GUEST_ON_TENANT_UNIT
+
+When creating a booking on a tenant-assigned unit:
+
+- require an approved TenantUnitHotelUse record
+- link booking to the assignment and settlement
+- do not end or alter the monthly tenancy
+- prevent overlapping booking
+
+At check-in:
+
+- Unit.status becomes OCCUPIED
+- Dashboard card becomes BLUE
+
+At checkout:
+
+- Unit.status becomes CLEANING_REQUIRED
+- cleaningCleared = false
+- accountsCleared = false
+- Dashboard card becomes RED
+
+After cleaningCleared and accountsCleared are both true:
+
+- if an active monthly assignment still exists, set:
+  Unit.status = MONTHLY_TENANT_VACANT
+  occupancyState = EMPTY
+
+- otherwise set:
+  Unit.status = AVAILABLE
+
+This distinction is mandatory.
+
+==================================================
+7. RENT AND ACCOUNTING
+==================================================
+
+Tenant monthly rent and temporary hotel-use revenue must remain separate.
+
+Do not automatically reduce tenant monthly rent.
+
+Only RENT_CREDIT settlement may create a rent credit.
+
+Create or reuse a ledger/credit transaction so the rent credit has:
+
+- amount
+- related monthly rent period
+- related hotel-use settlement
+- reason
+- approvedBy
+- date
+- audit history
+
+Avoid double counting hotel guest income, tenant share and rent credit in Profit/Loss.
+
+Organization income from the temporary booking equals the organization share, not the full guest payment when tenant share is payable.
+
+==================================================
+8. FRONTEND
+==================================================
+
+On the Monthly Tenant detail page add:
+
+Manage Assigned Units button.
+
+Show each assigned unit:
+
+- property
+- floor
+- unit number
+- unit type
+- monthly rent
+- occupancy state
+- hotel use allowed
+- current temporary hotel guest
+- assignment status
+
+Actions:
+
+- Assign More Unit
+- Change Unit
+- End Assignment
+- Mark Empty
+- Mark Occupied
+- Enable/Disable Hotel Use
+- Place Hotel Guest
+
+Place Hotel Guest must open a workflow:
+
+Step 1:
+Select eligible empty tenant unit
+
+Step 2:
+Select or create hotel guest
+
+Step 3:
+Enter booking dates and rate
+
+Step 4:
+Choose settlement type
+
+Step 5:
+Show tenant share, organization share and optional rent credit
+
+Step 6:
+Review and approve
+
+Step 7:
+Create booking
+
+==================================================
+9. DASHBOARD
+==================================================
+
+For an empty monthly tenant unit:
+
+- WHITE
+- MONTHLY TENANT EMPTY
+- show Hotel Use Allowed: Yes/No
+
+When a hotel guest is staying:
+
+- BLUE
+- OCCUPIED
+- show tenant name
+- show temporary hotel guest name
+- show booking dates
+- show settlement badge for authorized roles
+
+After guest checkout:
+
+- RED until cleaning and accounts clear
+
+After both clear:
+
+- return to WHITE, not GREEN, while tenant assignment remains active
+
+==================================================
+10. PERMISSIONS
+==================================================
+
+SUPER_ADMIN:
+
+- full access
+- create and approve settlements
+- change shares
+- apply rent credit
+- view complete finance
+
+ADMIN:
+
+- create request or draft
+- cannot approve their own settlement
+- sensitive changes require approval
+
+RECEPTIONIST:
+
+- see eligible approved unit
+- create/check in hotel guest booking after approval
+- cannot change shares
+- cannot approve settlement
+- cannot view unrelated tenant finance
+
+Enforce permissions in backend.
+
+==================================================
+11. TRANSACTIONS AND AUDIT
+==================================================
+
+Use Prisma transactions when:
+
+- settlement and booking are linked
+- check-in updates booking and unit
+- checkout updates booking and unit
+- settlement creates tenant payable or rent credit
+
+Reuse existing AuditLog, ApprovalRequest, Payment and Notification services.
+
+Audit:
+
+- hotel-use request created
+- settlement approved
+- booking created
+- shares changed
+- guest checked in
+- guest checked out
+- settlement completed
+- rent credit applied
+
+==================================================
+12. TESTS
+==================================================
+
+Test:
+
+1. Active tenant assignment marked OCCUPIED cannot be used.
+2. Empty tenant assignment with hotelUseAllowed=false cannot be used.
+3. Empty allowed assignment can create settlement.
+4. Percent shares must equal 100.
+5. Fixed shares must equal total guest charge.
+6. Overlapping booking returns 409.
+7. Approved settlement permits booking.
+8. Check-in makes unit BLUE/OCCUPIED.
+9. Checkout makes unit RED/CLEANING_REQUIRED.
+10. Cleaning only remains RED.
+11. Accounts only remains RED.
+12. Both clear return unit to WHITE/MONTHLY_TENANT_VACANT.
+13. Monthly tenancy remains ACTIVE throughout.
+14. Tenant monthly rent remains unchanged for normal settlement.
+15. RENT_CREDIT creates an explicit credit.
+16. Profit/Loss does not double count guest income and tenant share.
+17. Receptionist cannot approve settlement.
+18. Admin cannot approve own request.
+19. Super Admin can complete settlement.
+20. Full history remains visible.
+
+At the end provide:
+
+- schema changes
+- migration commands
+- API routes
+- frontend files changed
+- settlement calculations
+- dashboard status behavior
+- accounting impact
+- manual testing steps
+
+Do not modify unrelated modules.
+</user_query>

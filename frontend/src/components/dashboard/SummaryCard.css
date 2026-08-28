@@ -1,0 +1,82 @@
+.summary-card {
+  padding: 1.1rem 1rem;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  background:
+    linear-gradient(180deg, rgba(22, 22, 22, 0.96), rgba(10, 10, 10, 0.98));
+  min-height: 100px;
+  min-width: 0;
+  display: grid;
+  align-content: space-between;
+  gap: 0.75rem;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  border-color: rgba(212, 175, 55, 0.55);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.summary-card__label {
+  margin: 0;
+  color: var(--text-muted-on-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.summary-card__value {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  font-weight: 600;
+  color: var(--text-on-dark);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.summary-card--gold .summary-card__value {
+  color: var(--gold-bright);
+}
+
+.summary-card--success {
+  border-color: rgba(72, 187, 120, 0.35);
+}
+
+.summary-card--success .summary-card__value {
+  color: #7ddea5;
+}
+
+.summary-card--info {
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.summary-card--info .summary-card__value {
+  color: #93c5fd;
+}
+
+.summary-card--warn {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.summary-card--warn .summary-card__value {
+  color: #fcd34d;
+}
+
+.summary-card--danger {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.summary-card--danger .summary-card__value {
+  color: #fca5a5;
+}

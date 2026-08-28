@@ -1,0 +1,189 @@
+.monthly-tenants-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  margin-bottom: 0.9rem;
+}
+
+.monthly-tenants-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.monthly-tenants-page__tab {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-muted);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.monthly-tenants-page__tab.is-active {
+  color: #111;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border-color: var(--gold);
+}
+
+.monthly-tenants-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.monthly-tenants-page__summary > .summary-card {
+  min-width: 0;
+}
+
+.monthly-tenants-page__history {
+  margin-top: 1rem;
+}
+
+.monthly-tenants-page__history h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  color: var(--gold);
+}
+
+.monthly-tenants-page__history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.monthly-tenants-page__history-list li {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.monthly-tenants-page__search-hits {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.monthly-tenants-page__search-hits button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.monthly-tenants-page__search-hits button:hover,
+.monthly-tenants-page__search-hits button.is-selected {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.monthly-tenants-page__existing-banner {
+  grid-column: 1 / -1;
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  background: rgba(212, 175, 55, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.monthly-tenants-page__existing-banner p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.mt-period-bar {
+  position: sticky;
+  top: var(--header-height);
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+}
+
+.mt-period-bar__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.mt-period-bar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.mt-period-bar__chip {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-muted);
+  padding: 0.32rem 0.55rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mt-period-bar__chip.is-active {
+  color: #111;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border-color: var(--gold);
+}
+
+.mt-status-cell {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.mt-status-cell__occ {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.mt-reading-link {
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0;
+}
+
+.data-table-wrap--tenant-freeze {
+  --period-bar-height: 3.6rem;
+}

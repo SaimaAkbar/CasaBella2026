@@ -1,0 +1,106 @@
+.owner-detail-drawer {
+  max-width: min(960px, 96vw);
+  width: 100%;
+}
+
+.owner-detail-drawer__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.owner-detail-drawer__profile {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.owner-detail-drawer__profile dt {
+  font-size: 0.75rem;
+  color: #6b6558;
+  margin: 0 0 0.15rem;
+}
+
+.owner-detail-drawer__profile dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.owner-detail-drawer__full {
+  grid-column: 1 / -1;
+}
+
+.owner-detail-drawer__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.owner-detail-drawer__year-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.owner-detail-drawer__year-head h3 {
+  margin: 0;
+}
+
+.owner-detail-drawer__year-head label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.owner-detail-drawer__year-head input {
+  width: 5.5rem;
+  padding: 0.3rem 0.45rem;
+}
+
+.owner-year-grid {
+  border: 1px solid #ece6d8;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fffdf8;
+}
+
+.owner-year-grid h4 {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+}
+
+.owner-year-grid__months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+@media (min-width: 720px) {
+  .owner-year-grid__months {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+.owner-year-grid__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.2rem;
+  border-radius: 6px;
+  background: #f7f3ea;
+  font-size: 0.75rem;
+}
+
+.owner-year-grid__label {
+  color: #6b6558;
+}
+
+.owner-year-grid__icon {
+  font-size: 1rem;
+  line-height: 1;
+}

@@ -1,0 +1,176 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(3px);
+  animation: modalFade 0.18s ease;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-panel {
+  width: min(100%, 560px);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+}
+
+.modal-panel--sm {
+  width: min(100%, 420px);
+  padding: 1.35rem;
+}
+
+.modal-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.modal-panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  color: var(--text);
+}
+
+.modal-panel__close {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.modal-panel__close:hover {
+  color: var(--gold);
+}
+
+.modal-panel__body {
+  padding: 1.2rem;
+}
+
+.modal-panel__message {
+  margin: 0.85rem 0 1.25rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.modal-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.btn {
+  border: 1px solid transparent;
+  padding: 0.7rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
+  color: #111;
+}
+
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn--ghost {
+  border-color: rgba(212, 175, 55, 0.35);
+  background: transparent;
+  color: var(--gold);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.btn--danger {
+  background: #7f1d1d;
+  color: #fee2e2;
+  border-color: #ef4444;
+}
+
+.modal-panel--booking {
+  width: min(100%, 640px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-panel--booking .modal-panel__body {
+  overflow: auto;
+  min-height: 0;
+}
+
+.modal-panel--booking .form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--card-bg);
+  margin: 0.25rem -1.2rem -1.2rem;
+  padding: 0.85rem 1.2rem;
+  border-top: 1px solid var(--border);
+}
+
+.booking-bill {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1rem;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.booking-bill > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.booking-bill dt {
+  color: var(--gold-deep);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.booking-bill dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.modal-panel--booking .form-field textarea {
+  min-height: 3rem;
+}

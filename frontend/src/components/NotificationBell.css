@@ -1,0 +1,297 @@
+/* ── Bell button ──────────────────────────────────────────────────────────── */
+
+.nb-wrap {
+  position: relative;
+}
+
+.nb-bell {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(216, 184, 78, 0.28);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.nb-bell:hover,
+.nb-bell[aria-expanded='true'] {
+  border-color: var(--gold);
+  background: rgba(216, 184, 78, 0.1);
+}
+
+.nb-bell__badge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+
+.nb-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: clamp(320px, 26rem, 420px);
+  max-height: min(80vh, 32rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--text);
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* ── Panel header ─────────────────────────────────────────────────────────── */
+
+.nb-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.nb-panel__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.nb-panel__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nb-panel__btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nb-panel__btn:hover {
+  color: var(--gold-deep, #b8963a);
+  background: rgba(216, 184, 78, 0.1);
+}
+
+/* ── Empty / caught-up ────────────────────────────────────────────────────── */
+
+.nb-panel__empty {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.nb-panel__caught-up {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.75rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.nb-panel__caught-up span:first-child {
+  font-size: 1.4rem;
+  color: #22c55e;
+}
+
+/* ── Notification list ────────────────────────────────────────────────────── */
+
+.nb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Individual row ───────────────────────────────────────────────────────── */
+
+.nb-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--border-soft, #f0f0f0);
+  background: transparent;
+  color: var(--text);
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.nb-item:last-child {
+  border-bottom: none;
+}
+
+.nb-item:hover {
+  background: rgba(216, 184, 78, 0.05);
+}
+
+.nb-item--unread {
+  background: rgba(216, 184, 78, 0.07);
+}
+
+.nb-item--unread:hover {
+  background: rgba(216, 184, 78, 0.12);
+}
+
+/* left column: priority dot + unread dot */
+.nb-item__left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+/* Priority indicator dot */
+.nb-priority {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.nb-priority--critical { background: #ef4444; }
+.nb-priority--high     { background: #f97316; }
+.nb-priority--normal   { background: #3b82f6; }
+.nb-priority--low      { background: #94a3b8; }
+
+/* small blue dot for unread */
+.nb-item__unread-dot {
+  display: inline-block;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--gold, #d8b84e);
+  flex-shrink: 0;
+}
+
+/* body: title + message + time */
+.nb-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.nb-item__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nb-item--unread .nb-item__title {
+  color: var(--gold-deep, #b8963a);
+}
+
+.nb-item__message {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  /* allow two lines max before truncating */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nb-item__time {
+  font-size: 0.67rem;
+  color: #9aa0a8;
+  margin-top: 0.05rem;
+}
+
+/* "View →" chevron */
+.nb-item__view {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.nb-item:hover .nb-item__view {
+  opacity: 1;
+  color: var(--gold-deep, #b8963a);
+}
+
+/* ── Show more button ─────────────────────────────────────────────────────── */
+
+.nb-panel__show-more {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-top: 1px solid var(--border-soft, #f0f0f0);
+  background: #fafafa;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nb-panel__show-more:hover {
+  color: var(--gold-deep, #b8963a);
+  background: rgba(216, 184, 78, 0.06);
+}
+
+/* ── Mobile: full-width drawer ────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .nb-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: 85dvh;
+    border-radius: 0 0 16px 16px;
+    border-top: none;
+  }
+}

@@ -1,0 +1,19 @@
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: min(100%, 420px);
+}
+
+.search-bar__icon {
+  color: var(--gold);
+}
+
+.search-bar input {
+  width: 100%;
+  border: 1px solid rgba(216, 184, 78, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-on-dark);
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+}

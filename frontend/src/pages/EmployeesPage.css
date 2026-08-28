@@ -1,0 +1,174 @@
+.employees-page__subtitle {
+  margin: -0.35rem 0 1rem;
+  color: #6b6256;
+}
+
+.employees-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+}
+
+.employees-page__tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.employees-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.employees-page__summary--pastel .summary-card {
+  border: 1px solid #ece6d8;
+  box-shadow: none;
+  background: #fff;
+}
+
+.employees-page__summary--pastel .summary-card--info {
+  background: #eef6fb;
+}
+
+.employees-page__summary--pastel .summary-card--success {
+  background: #eef8f1;
+}
+
+.employees-page__summary--pastel .summary-card--gold {
+  background: #faf6ea;
+}
+
+.employees-page__summary--pastel .summary-card--danger {
+  background: #fbf0ef;
+}
+
+.employees-page__summary--pastel .summary-card--warn {
+  background: #fbf5e8;
+}
+
+.employees-page__viewing {
+  align-self: end;
+  margin: 0;
+  font-weight: 600;
+  color: #5c5346;
+}
+
+.employees-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.employees-badge--advance {
+  background: #e8f1fb;
+  color: #2f5f8a;
+  border: 1px solid #c9dff3;
+}
+
+.employees-advance-preview {
+  border: 1px solid #ece6d8;
+  background: #faf8f3;
+  border-radius: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.employees-advance-preview p {
+  margin: 0;
+}
+
+.salary-advance-banner {
+  display: block;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.45rem;
+  border: 1px solid #efd9a8;
+  background: linear-gradient(180deg, #fff8e8 0%, #faf0d6 100%);
+  color: #6b5420;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.salary-advance-banner strong {
+  color: #5a4518;
+  font-weight: 700;
+}
+
+.salary-advance-banner--summary {
+  margin: 0 0 0.85rem;
+}
+
+.salary-advance-banner--row {
+  font-size: 0.78rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.salary-advance-banner--detail {
+  margin: 0 0 0.9rem;
+}
+
+.salary-advance-banner--payment {
+  margin: 0 0 0.75rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.employees-detail__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.employees-year-grid {
+  margin-top: 1rem;
+  border: 1px solid #ece6d8;
+  border-radius: 0.55rem;
+  padding: 0.8rem;
+  background: #fff;
+}
+
+.employees-year-grid__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.employees-year-grid__months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.employees-year-grid__cell {
+  border: 1px solid #e8e1d4;
+  background: #faf8f3;
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.3rem;
+  display: grid;
+  gap: 0.15rem;
+  justify-items: center;
+  cursor: pointer;
+}
+
+.employees-year-grid__cell:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (max-width: 720px) {
+  .employees-year-grid__months {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,109 @@
+.inventory-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-page__tab {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-muted);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.inventory-page__tab.is-active {
+  color: #111;
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border-color: var(--gold);
+}
+
+.inventory-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.inventory-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.inventory-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.inventory-history {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.inventory-history__row {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.inventory-history__row header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.inventory-history__conditions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inventory-history__row p {
+  margin: 0.2rem 0;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.inventory-history__meta {
+  color: var(--text-muted) !important;
+  font-size: 0.78rem !important;
+}
+
+.inventory-detail {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.inventory-detail dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.35rem 0.75rem;
+}
+
+.inventory-detail dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inventory-detail dd {
+  margin: 0;
+  color: var(--text);
+}

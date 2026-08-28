@@ -1,0 +1,129 @@
+import { ApiError, apiRequest, toQueryString } from './client';
+import type {
+  ExportFormat,
+  ReportCatalogItem,
+  ReportPayload,
+  ReportQuery,
+  ReportType,
+} from '../types/report';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+function queryParams(query: ReportQuery = {}) {
+  return toQueryString({
+    date: query.date || undefined,
+    month: query.month === undefined ? undefined : query.month,
+    year: query.year === undefined ? undefined : query.year,
+    startDate: query.startDate || undefined,
+    endDate: query.endDate || undefined,
+    propertyId: query.propertyId || undefined,
+    unitId: query.unitId || undefined,
+    tenantId: query.tenantId || undefined,
+    guestId: query.guestId || undefined,
+    employeeId: query.employeeId || undefined,
+    categoryId: query.categoryId || undefined,
+    bookingType: query.bookingType || undefined,
+    bookingStatus: query.bookingStatus || undefined,
+    paymentStatus: query.paymentStatus || undefined,
+    paymentMethod: query.paymentMethod || undefined,
+    movementType: query.movementType || undefined,
+    condition: query.condition || undefined,
+    accountingView: query.accountingView || undefined,
+    search: query.search || undefined,
+    page: query.page === undefined ? undefined : query.page,
+    limit: query.limit === undefined ? undefined : query.limit,
+  });
+}
+
+export function fetchReportCatalog(token: string): Promise<ReportCatalogItem[]> {
+  return apiRequest<ReportCatalogItem[]>('/reports/catalog', { token });
+}
+
+export function fetchReport(
+  token: string,
+  reportType: ReportType,
+  query: ReportQuery = {},
+): Promise<ReportPayload> {
+  return apiRequest<ReportPayload>(
+    `/reports/${reportType}${queryParams(query)}`,
+    { token },
+  );
+}
+
+function parseFilename(contentDisposition: string | null): string | null {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const match = /filename="([^"]+)"/i.exec(contentDisposition);
+  return match?.[1] ?? null;
+}
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function exportReport(
+  token: string,
+  reportType: ReportType,
+  query: ReportQuery & { format: ExportFormat },
+): Promise<void> {
+  if (!API_URL) {
+    throw new Error('VITE_API_URL is not set. Add it to frontend/.env');
+  }
+
+  const params = toQueryString({
+    ...Object.fromEntries(
+      Object.entries(query).filter(
+        ([key, value]) =>
+          key !== 'format' &&
+          value !== undefined &&
+          value !== null &&
+          value !== '',
+      ),
+    ),
+    format: query.format,
+  });
+
+  const response = await fetch(
+    `${API_URL}/reports/${reportType}/export${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    let message = 'Unable to export report. Please try again.';
+
+    try {
+      const body = (await response.json()) as { message?: string | string[] };
+      const backendMessage = Array.isArray(body.message)
+        ? body.message.join(', ')
+        : body.message;
+      if (backendMessage) {
+        message = backendMessage;
+      }
+    } catch {
+      // ignore parse errors for blob responses
+    }
+
+    throw new ApiError(message, response.status);
+  }
+
+  const blob = await response.blob();
+  const filename =
+    parseFilename(response.headers.get('Content-Disposition')) ??
+    `${reportType}.${query.format === 'xlsx' ? 'xlsx' : query.format}`;
+
+  triggerDownload(blob, filename);
+}

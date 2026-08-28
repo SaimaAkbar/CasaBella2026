@@ -1,0 +1,752 @@
+<timestamp>Thursday, Aug 6, 2026, 12:00 AM (UTC+5)</timestamp>
+<user_query>
+Act as a senior full-stack debugging architect.
+
+The Monthly Tenant module of the Hotel Residences POS is not working according to the business requirements.
+
+Do not add new unrelated features.
+
+First inspect the complete existing implementation, identify conflicting models, APIs, forms and calculations, and then repair the Monthly Tenant module as one consistent workflow.
+
+Existing stack:
+
+- React + TypeScript + Vite
+- NestJS
+- Prisma
+- PostgreSQL
+- JWT authentication
+- SUPER_ADMIN, ADMIN and RECEPTIONIST roles
+- Properties and Units
+- Guests and Bookings
+- Payments
+- Dashboard
+- Approval and Audit systems
+
+==================================================
+1. EXACT BUSINESS MEANING
+==================================================
+
+A Monthly Tenant is a person or business that takes one or more rooms/apartments from the organization on a monthly rental agreement.
+
+The tenant must pay rent to the organization every month.
+
+Example:
+
+Tenant: Ahmed Khan
+
+Assigned units:
+- Casa Bella — Apartment 1A — Floor 1
+- Casa Bella — Room 102 — Floor 1
+
+Monthly rent:
+- Apartment 1A = Rs. 40,000
+- Room 102 = Rs. 20,000
+
+Total monthly rent payable by tenant:
+Rs. 60,000
+
+The tenant may pay:
+
+- advance
+- partial payment
+- half payment
+- full payment
+- multiple installments
+
+The system must show:
+
+- monthly amount payable
+- amount received
+- remaining/due amount
+- due date
+- overdue amount
+- payment status
+- payment history
+
+==================================================
+2. PERMANENT TENANT PROFILE
+==================================================
+
+Tenant profile is a permanent person/business record.
+
+Required fields:
+
+- id
+- fullName
+- phone
+- alternatePhone optional
+- email optional
+- cnic optional
+- address optional
+- emergencyContactName optional
+- emergencyContactPhone optional
+- notes optional
+- isActive
+- createdAt
+- updatedAt
+
+Requirements:
+
+- CNIC must save correctly.
+- Empty CNIC should be stored as null.
+- Duplicate supplied CNIC should return 409.
+- Existing tenant must not be duplicated when returning later.
+- Tenant remains searchable even when no active agreement exists.
+
+One tenant may have many agreements and assignments over time.
+
+==================================================
+3. MONTHLY AGREEMENT
+==================================================
+
+Create or repair a MonthlyAgreement concept.
+
+Required fields:
+
+- id
+- tenantId
+- agreementNumber
+- agreementStart
+- agreementEnd optional
+- billingDay
+- securityDeposit
+- status:
+  - DRAFT
+  - ACTIVE
+  - ENDED
+  - CANCELLED
+- notes optional
+- createdAt
+- updatedAt
+- endedAt optional
+
+Rules:
+
+- One tenant may have several historical agreements.
+- A returning tenant gets a new agreement, not a duplicated tenant profile.
+- Ending an agreement must preserve all previous records.
+- Agreement end date must be after start date.
+
+==================================================
+4. MULTIPLE UNIT ASSIGNMENTS
+==================================================
+
+A monthly agreement can contain one or multiple units.
+
+Use or create MonthlyUnitAssignment.
+
+Required fields:
+
+- id
+- agreementId
+- unitId
+- monthlyRent
+- assignmentStart
+- assignmentEnd optional
+- occupancyState:
+  - OCCUPIED
+  - EMPTY
+- hotelUseAllowed
+- status:
+  - ACTIVE
+  - ENDED
+  - CANCELLED
+- notes optional
+- createdAt
+- updatedAt
+
+Rules:
+
+- Do not store only one unitId on the tenant profile.
+- Tenant may have multiple active assigned units.
+- Each assigned unit may have its own monthly rent.
+- Total monthly rent is the sum of active assignment rents.
+- A unit cannot have two conflicting active monthly assignments.
+- Assignment history must never be overwritten.
+
+==================================================
+5. PROPERTY TO UNIT FILTERING
+==================================================
+
+In every tenant form:
+
+Property is selected first.
+
+Unit is selected second.
+
+When Casa Bella is selected, show only Casa Bella units.
+
+Use backend filtering:
+
+GET /units?propertyId=<selectedPropertyId>&isActive=true
+
+or an eligible-unit endpoint.
+
+Unit dropdown must:
+
+- remain disabled until property is selected
+- clear the previous unit when property changes
+- show loading state
+- show only units belonging to the selected property
+- exclude blocked, maintenance or conflicting units
+- display property, unit number, unit type and floor
+
+Example:
+
+Casa Bella — Apartment 1A — Floor 1
+Casa Bella — Room 101 — Floor 1
+
+Backend must validate that selected unit belongs to selected property.
+
+Return 400 when they do not match.
+
+==================================================
+6. MONTHLY BILLING
+==================================================
+
+Monthly rent must not be stored only as one mutable balance.
+
+Create or repair MonthlyBill.
+
+Required fields:
+
+- id
+- agreementId
+- billingMonth
+- billingYear
+- baseRent
+- electricityCharges
+- maintenanceCharges
+- societyCharges
+- cleaningCharges
+- laundryCharges
+- waterCharges
+- otherCharges
+- previousBalance
+- credits
+- totalPayable
+- totalReceived
+- remainingBalance
+- dueDate
+- paymentStatus
+- finalized
+- createdAt
+- updatedAt
+
+Compound unique:
+
+- agreementId
+- billingMonth
+- billingYear
+
+Backend calculation:
+
+baseRent =
+sum of active unit-assignment monthly rents for that billing period
+
+totalPayable =
+baseRent
++ electricityCharges
++ maintenanceCharges
++ societyCharges
++ cleaningCharges
++ laundryCharges
++ waterCharges
++ otherCharges
++ previousBalance
+- credits
+
+remainingBalance =
+totalPayable - totalReceived
+
+Payment status:
+
+- UNPAID
+- ADVANCE
+- PARTIAL
+- HALF_PAID
+- PAID
+- OVERDUE
+
+Do not trust frontend totals.
+
+Generate a separate bill for every month.
+
+Do not overwrite previous monthly bills.
+
+==================================================
+7. PAYMENTS
+==================================================
+
+Reuse the existing Payment module.
+
+Every payment installment must be stored separately and linked to MonthlyBill or the relevant monthly agreement billing period.
+
+Examples:
+
+Bill = Rs. 60,000
+
+Payment 1 = Rs. 20,000
+Payment 2 = Rs. 10,000
+Remaining = Rs. 30,000
+
+Requirements:
+
+- previous installments stay visible
+- totalReceived comes from completed Payment records
+- no direct editing of totalReceived
+- refunds and reversals must update balance correctly
+- ordinary payments cannot exceed remaining amount
+
+==================================================
+8. EMPTY TENANT UNIT
+==================================================
+
+An active assigned unit may be:
+
+OCCUPIED:
+Tenant or tenant customer is using it.
+
+EMPTY:
+The tenant agreement remains active, but no one is currently staying there.
+
+Dashboard status:
+
+OCCUPIED:
+Blue
+
+EMPTY:
+White / Monthly Tenant Empty
+
+The unit must not become normally green while an active monthly assignment exists.
+
+==================================================
+9. HOTEL CLIENT IN EMPTY TENANT UNIT
+==================================================
+
+If an assigned tenant unit is EMPTY and hotelUseAllowed is true, the organization may place its own temporary guest there.
+
+Eligibility:
+
+- agreement ACTIVE
+- assignment ACTIVE
+- occupancyState EMPTY
+- hotelUseAllowed true
+- unit not blocked
+- unit not maintenance
+- no overlapping booking
+- no current tenant occupant
+
+Create a separate hotel-use settlement linked to:
+
+- tenant assignment
+- booking
+- guest
+- total guest charge
+- tenant share
+- organization share
+- rent credit if applicable
+- settlement type
+- approval status
+
+Settlement types:
+
+- FIXED_AMOUNT
+- PERCENTAGE
+- NO_TENANT_SHARE
+- RENT_CREDIT
+- CUSTOM
+
+Do not end the tenant agreement.
+
+Do not change monthly rent automatically.
+
+Only RENT_CREDIT may reduce the tenant bill through an explicit credit record.
+
+==================================================
+10. STATUS AFTER HOTEL GUEST
+==================================================
+
+Before hotel guest:
+
+WHITE
+MONTHLY_TENANT_VACANT
+
+Guest checks in:
+
+BLUE
+OCCUPIED
+Source = HOTEL_GUEST_ON_TENANT_UNIT
+
+Guest checks out:
+
+RED
+CLEANING_REQUIRED
+
+Remain red until:
+
+- cleaningCleared = true
+- accountsCleared = true
+
+After both clear:
+
+If active monthly assignment still exists:
+- return to WHITE
+- MONTHLY_TENANT_VACANT
+- occupancyState EMPTY
+
+Do not turn green.
+
+==================================================
+11. CORRECT FRONTEND PAGES
+==================================================
+
+Redesign Monthly Tenants into these tabs:
+
+A. Tenant Directory
+
+Show:
+
+- Tenant Name
+- Phone
+- CNIC for authorized users
+- Active Agreement
+- Number of Assigned Units
+- Total Current Monthly Rent
+- Current Month Paid
+- Current Month Due
+- Status
+- Actions
+
+Actions:
+
+- View Tenant
+- Edit Profile
+- Create Agreement
+- Manage Units
+- View Billing
+- View History
+- Archive
+
+B. Active Agreements
+
+Show:
+
+- Agreement Number
+- Tenant
+- Start / End
+- Number of Units
+- Monthly Rent
+- Current Bill
+- Paid
+- Due
+- Status
+- Actions
+
+C. Assigned Units
+
+Show:
+
+- Tenant
+- Agreement
+- Property
+- Unit
+- Floor
+- Unit Type
+- Unit Rent
+- Occupancy
+- Hotel Use Allowed
+- Current Guest
+- Actions
+
+D. Monthly Bills
+
+Show:
+
+- Tenant
+- Month / Year
+- Base Rent
+- Additional Charges
+- Credits
+- Total Payable
+- Received
+- Remaining
+- Due Date
+- Status
+- Actions
+
+E. History
+
+Show ended agreements, old assignments, old bills and payments.
+
+==================================================
+12. TENANT DETAIL PAGE
+==================================================
+
+Use one tenant detail page with tabs:
+
+- Profile
+- Agreements
+- Assigned Units
+- Monthly Bills
+- Payments
+- Hotel Use History
+- Complete History
+
+Add a clear button:
+
+Manage Assigned Units
+
+Within it allow:
+
+- Assign More Unit
+- Change Unit
+- End Assignment
+- Edit Unit Rent
+- Mark Empty
+- Mark Occupied
+- Enable/Disable Hotel Use
+- Place Hotel Guest
+
+Changing a unit must end the old assignment and create a new assignment.
+
+Do not overwrite the old unitId.
+
+==================================================
+13. RETURNING TENANT
+==================================================
+
+Example:
+
+Ali rented Unit 101 from January to March.
+
+Agreement ends.
+
+Ali returns in July and rents Unit 205.
+
+Correct behavior:
+
+- reuse Ali’s existing tenant profile
+- create a new agreement
+- create a new unit assignment
+- preserve January-to-March history
+- create July monthly bills separately
+
+Search returning tenant by:
+
+- name
+- phone
+- CNIC
+
+If CNIC already exists, prompt user to select the existing tenant.
+
+==================================================
+14. BACKEND ENDPOINTS
+==================================================
+
+Review existing endpoints and consolidate rather than duplicating.
+
+Required capabilities:
+
+Tenant Profiles:
+
+POST /monthly-tenants
+GET /monthly-tenants
+GET /monthly-tenants/:id
+PATCH /monthly-tenants/:id
+DELETE /monthly-tenants/:id
+
+Agreements:
+
+POST /monthly-agreements
+GET /monthly-agreements
+GET /monthly-agreements/:id
+PATCH /monthly-agreements/:id
+POST /monthly-agreements/:id/activate
+POST /monthly-agreements/:id/end
+
+Assignments:
+
+POST /monthly-unit-assignments
+GET /monthly-unit-assignments
+GET /monthly-unit-assignments/:id
+PATCH /monthly-unit-assignments/:id
+POST /monthly-unit-assignments/:id/mark-empty
+POST /monthly-unit-assignments/:id/mark-occupied
+POST /monthly-unit-assignments/:id/end
+GET /monthly-unit-assignments/eligible-units
+
+Bills:
+
+POST /monthly-bills/generate
+GET /monthly-bills
+GET /monthly-bills/:id
+POST /monthly-bills/:id/finalize
+POST /monthly-bills/generate-monthly
+
+Hotel Use:
+
+POST /tenant-unit-hotel-use
+GET /tenant-unit-hotel-use
+GET /tenant-unit-hotel-use/:id
+POST /tenant-unit-hotel-use/:id/approve
+POST /tenant-unit-hotel-use/:id/cancel
+POST /tenant-unit-hotel-use/:id/settle
+
+Do not keep old conflicting endpoints active without documenting them.
+
+==================================================
+15. ROLE RULES
+==================================================
+
+SUPER_ADMIN:
+
+- full access
+- change rent
+- assign or remove units
+- approve hotel-use settlement
+- view all billing and CNIC
+
+ADMIN:
+
+- create tenant/agreement/assignment
+- cannot delete
+- sensitive finalized edits require approval
+- cannot approve their own hotel-use settlement
+
+RECEPTIONIST:
+
+- view operational tenant and assigned-unit information
+- cannot view full tenant finance or confidential CNIC unless specifically allowed
+- cannot change rent
+- cannot approve settlement
+- may create/check-in a hotel guest only after approval
+
+Enforce in backend.
+
+==================================================
+16. ROOT-CAUSE DEBUGGING
+==================================================
+
+Trace and document the current failure.
+
+Check:
+
+- conflicting MonthlyTenant and MonthlyTenancy models
+- incorrect one-to-one unit relation
+- tenant creation without assignment
+- assignment creation without agreement
+- CNIC naming mismatch
+- propertyId not sent to eligible units API
+- stale React Query cache
+- status filters hiding saved records
+- wrong API response field names
+- total rent calculated from only one unit
+- mutable balance fields conflicting with Payments
+- old and new forms calling different endpoints
+- incorrect unit status after clearance
+- dashboard and tenant page using different status logic
+
+Fix the root causes.
+
+Do not apply visual-only patches.
+
+==================================================
+17. DATA MIGRATION
+==================================================
+
+Before changing schema:
+
+- inspect current data
+- preserve tenant profiles
+- preserve existing assignments
+- preserve payments and tenancy history
+
+If the existing MonthlyTenancy contains both agreement and assignment information, create a safe migration strategy to split or map it.
+
+Do not reset or delete the development database automatically.
+
+Provide migration commands and explain data impact.
+
+==================================================
+18. REQUIRED TEST SCENARIOS
+==================================================
+
+Test:
+
+1. Create tenant with CNIC.
+2. Tenant appears in Tenant Directory.
+3. Create agreement.
+4. Select Casa Bella.
+5. Only Casa Bella eligible units appear.
+6. Assign Apartment 1A.
+7. Assign Room 102 to the same tenant.
+8. Total monthly rent equals both unit rents.
+9. Generate current-month bill.
+10. Record two payment installments.
+11. Verify due amount.
+12. Mark one unit empty.
+13. Dashboard shows it white.
+14. Enable hotel use.
+15. Create approved hotel-use settlement.
+16. Check in hotel guest.
+17. Dashboard shows it blue.
+18. Checkout makes it red.
+19. Cleaning only keeps it red.
+20. Accounts only keeps it red.
+21. Both clear return it to white.
+22. Monthly agreement remains active.
+23. End one unit assignment without ending the other.
+24. Bill next month reflects only active assignments.
+25. End agreement.
+26. Tenant remains in directory.
+27. Reuse tenant after three-month gap.
+28. Old history remains unchanged.
+29. Duplicate CNIC is prevented.
+30. Receptionist privacy works.
+31. Admin delete is blocked.
+32. Super Admin sees complete details.
+33. No console errors.
+34. Production build succeeds.
+
+==================================================
+19. IMPLEMENTATION APPROACH
+==================================================
+
+Do this work in stages.
+
+Stage 1:
+Audit existing schema, APIs and frontend.
+
+Stage 2:
+Provide a written findings report before major refactoring.
+
+Stage 3:
+Fix data model and migration.
+
+Stage 4:
+Fix backend services and APIs.
+
+Stage 5:
+Fix frontend workflow and dependent dropdowns.
+
+Stage 6:
+Fix dashboard integration.
+
+Stage 7:
+Run automated and manual tests.
+
+Do not generate a completely new project.
+
+Do not modify unrelated modules.
+
+At the end provide:
+
+- root causes found
+- final data model
+- migration performed
+- old endpoints deprecated
+- files changed
+- test results
+- remaining limitations
+</user_query>

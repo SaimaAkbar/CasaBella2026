@@ -1,0 +1,39 @@
+.feedback-state {
+  display: grid;
+  place-items: center;
+  gap: 0.45rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.feedback-state h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.feedback-state p {
+  margin: 0;
+}
+
+.feedback-state--error h3 {
+  color: #b91c1c;
+}
+
+.feedback-state__spinner {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

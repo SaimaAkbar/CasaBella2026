@@ -1,0 +1,171 @@
+.data-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  max-height: min(68vh, calc(100vh - var(--header-height, 88px) - var(--dt-offset, 9.5rem)));
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card-bg, #fff);
+  box-shadow: var(--shadow-soft);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.data-table-wrap--tenant-freeze {
+  max-height: calc(100vh - var(--header-height, 88px) - var(--period-bar-height, 3.4rem) - 1.25rem);
+}
+
+.data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft, #ececec);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  color: var(--gold-deep, #8a6a12);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background: #fafbfc;
+}
+
+.data-table td {
+  color: var(--text);
+  font-size: 0.84rem;
+}
+
+.data-table__col--actions {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: var(--card-bg, #fff);
+  box-shadow: -6px 0 10px rgba(0, 0, 0, 0.04);
+  width: 16.5rem;
+  max-width: 18.5rem;
+  min-width: 15.5rem;
+  white-space: nowrap;
+}
+
+.data-table thead .data-table__col--actions {
+  top: 0;
+  z-index: 8;
+  background: #fafbfc;
+}
+
+.data-table__sticky-left {
+  position: sticky;
+  z-index: 3;
+  background: var(--card-bg, #fff);
+}
+
+.data-table thead .data-table__sticky-left {
+  top: 0;
+  background: #fafbfc;
+  z-index: 8;
+}
+
+.data-table__sticky-left--0 {
+  left: 0;
+  min-width: 4.4rem;
+}
+
+.data-table__sticky-left--1 {
+  min-width: 9.5rem;
+}
+
+.data-table__sticky-left--last {
+  box-shadow: 6px 0 10px rgba(0, 0, 0, 0.06);
+  border-right: 1px solid var(--border);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(216, 184, 78, 0.06);
+}
+
+.data-table tbody tr:hover .data-table__col--actions,
+.data-table tbody tr:hover .data-table__sticky-left {
+  background: #faf8f0;
+}
+
+.data-table tbody tr.is-overdue td,
+.data-table tbody tr.is-overdue .data-table__sticky-left,
+.data-table tbody tr.is-overdue .data-table__col--actions {
+  background: #fff1f1;
+}
+
+.data-table tbody tr.is-overdue td:first-child {
+  box-shadow: inset 4px 0 0 #dc2626;
+}
+
+.data-table tbody tr.is-overdue:hover td,
+.data-table tbody tr.is-overdue:hover .data-table__sticky-left,
+.data-table tbody tr.is-overdue:hover .data-table__col--actions {
+  background: #ffe4e4;
+}
+
+.data-table tbody tr.is-paid td,
+.data-table tbody tr.is-paid .data-table__sticky-left,
+.data-table tbody tr.is-paid .data-table__col--actions {
+  background: #f3fbf5;
+}
+
+.data-table__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.data-table__action {
+  border: 1px solid rgba(184, 150, 47, 0.35);
+  background: transparent;
+  color: var(--gold-deep, #8a6a12);
+  padding: 0.32rem 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.data-table__action--primary {
+  background: var(--gold, #d8b84e);
+  border-color: var(--gold, #d8b84e);
+  color: #1a1a1a;
+}
+
+.data-table__action--primary:hover:not(:disabled) {
+  filter: brightness(0.96);
+  background: var(--gold, #d8b84e);
+}
+
+.data-table__action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.data-table__action--danger {
+  border-color: rgba(185, 28, 28, 0.35);
+  color: #b91c1c;
+}
+
+.data-table__after-row td {
+  padding: 0.35rem 0.85rem 0.75rem;
+  white-space: normal;
+}

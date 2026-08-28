@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "OwnerMonthlyStatement_ownerUnitAssignmentId_statementMonth_stat" RENAME TO "OwnerMonthlyStatement_ownerUnitAssignmentId_statementMonth__key";

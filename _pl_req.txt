@@ -1,0 +1,1141 @@
+TASK A:
+Audit, verify and correct the Profit & Loss module calculations.
+
+TASK B:
+Temporarily hide unused sidebar modules:
+- Reports
+- Approvals
+- Notifications
+- Inventory
+
+Do NOT delete these modules.
+Do NOT delete routes, backend services, Prisma models or database data.
+Only hide them from normal sidebar/navigation for now.
+
+==================================================
+TASK A — PROFIT & LOSS FINANCIAL AUDIT
+==================================================
+
+The Profit & Loss module must be financially accurate.
+
+Do NOT assume existing calculations are correct.
+
+Inspect:
+
+- ProfitLossService
+- DashboardService
+- PaymentService
+- ExpenseService
+- Monthly Tenant payments
+- Daily Guest payments
+- Owner payments
+- Salary transactions
+- Electricity bills
+- Other expenses
+- Refunds
+- Reversals
+- Security deposits
+- Advances
+- linked expenses
+- transaction dates
+- property/unit filters
+
+Before modifying code, document exactly where every Profit/Loss number currently comes from.
+
+==================================================
+1. DEFINE ACCOUNTING MODES
+==================================================
+
+The system may support:
+
+CASH VIEW
+
+and
+
+ACCRUAL VIEW
+
+Keep both if they already exist.
+
+Definitions:
+
+CASH VIEW:
+
+Income =
+actual qualifying business money received during selected period
+
+Expenses =
+actual qualifying business money paid during selected period
+
+Result:
+
+Net Cash Flow =
+Cash Income - Cash Expenses
+
+ACCRUAL VIEW:
+
+Income =
+earned/recognized business income for selected period
+
+Expenses =
+recognized business expenses for selected period
+
+Result:
+
+Net Profit / Loss =
+Accrued Income - Accrued Expenses
+
+Do NOT mix cash income with accrued expenses.
+
+Do NOT label cash flow as profit unless the accounting basis actually supports that.
+
+==================================================
+2. BUSINESS INCOME
+==================================================
+
+Audit qualifying business income.
+
+Possible sources:
+
+- Monthly tenant rent
+- Daily guest booking payments
+- Hourly booking payments
+- Other approved operating income
+
+Use only real existing sources.
+
+Do NOT count:
+
+- unpaid balance as cash income
+- refundable security deposits as profit
+- owner payable amounts as income
+- internal transfers
+- reversed transactions
+- cancelled payments
+- duplicate summary fields
+- the same payment twice
+
+==================================================
+3. DAILY GUEST EXAMPLE
+==================================================
+
+Guest Bill:
+Rs. 20,000
+
+Paid:
+Rs. 15,000
+
+Remaining:
+Rs. 5,000
+
+CASH VIEW:
+
+Income:
+Rs. 15,000
+
+Outstanding:
+Rs. 5,000
+
+Do NOT count:
+
+20,000 + 15,000
+
+==================================================
+4. MONTHLY TENANT EXAMPLE
+==================================================
+
+Monthly Rent:
+Rs. 50,000
+
+Paid:
+Rs. 30,000
+
+Remaining:
+Rs. 20,000
+
+CASH VIEW:
+
+Income:
+Rs. 30,000
+
+Outstanding Receivable:
+Rs. 20,000
+
+ACCRUAL VIEW:
+
+Recognized Rent Income:
+Rs. 50,000
+
+Outstanding:
+Rs. 20,000
+
+Keep the accounting basis explicit.
+
+==================================================
+5. SECURITY DEPOSIT
+==================================================
+
+Refundable tenant/guest security should not normally be Profit/Loss income.
+
+Example:
+
+Rent:
+Rs. 50,000
+
+Security:
+Rs. 100,000
+
+Cash received:
+Rs. 150,000
+
+Profit/Loss revenue should normally include:
+
+Rs. 50,000
+
+Security held:
+
+Rs. 100,000
+
+Classify security separately as liability/held deposit.
+
+Verify current implementation.
+
+==================================================
+6. OWNER FINANCIALS
+==================================================
+
+Very important.
+
+The Owner module supports:
+
+RECEIVABLE_FROM_OWNER
+
+and
+
+PAYABLE_TO_OWNER
+
+Do not mix owner directions.
+
+If owner owes organization:
+
+Expected:
+Rs. 50,000
+
+Received:
+Rs. 30,000
+
+Remaining:
+Rs. 20,000
+
+Owner Received may be an inflow if that agreement represents legitimate business revenue.
+
+Document how it is classified.
+
+If organization owes owner:
+
+Expected:
+Rs. 100,000
+
+Paid:
+Rs. 60,000
+
+Remaining:
+Rs. 40,000
+
+This is an outflow/payable.
+
+Do not classify Owner Payable as income.
+
+==================================================
+7. OWNER PAYMENT DOUBLE COUNTING
+==================================================
+
+If OwnerPayment creates a linked Expense:
+
+Count the linked Expense ONCE.
+
+Do not count:
+
+OwnerPayment
++
+Expense
+
+twice.
+
+If there is no linked Expense and owner payment is a valid operating outflow:
+
+include the owner payment directly.
+
+Centralize this rule.
+
+==================================================
+8. SALARY EXPENSE
+==================================================
+
+Salary example:
+
+Base Salary:
+Rs. 25,000
+
+Advance:
+Rs. 5,000
+
+Final Salary Payment:
+Rs. 20,000
+
+Total salary cost:
+
+Rs. 25,000
+
+Do NOT count:
+
+5,000 + 20,000 + 25,000
+
+For cash view:
+
+Cash salary outflow =
+actual advance payment + actual final salary payment
+
+For accrual view:
+
+Salary expense =
+recognized salary obligation for salary month
+
+Avoid double counting linked Salary Expense records.
+
+==================================================
+9. FUTURE SALARY ADVANCE
+==================================================
+
+Employee receives:
+
+Rs. 5,000 in August
+
+Advance For:
+September Salary
+
+September salary:
+Rs. 25,000
+
+September remaining:
+Rs. 20,000
+
+Do not make September salary cost Rs. 30,000.
+
+For CASH VIEW:
+
+The Rs. 5,000 is cash outflow on the actual payment date.
+
+For ACCRUAL VIEW:
+
+The salary obligation belongs to September according to existing accounting design.
+
+Document this clearly.
+
+==================================================
+10. ELECTRICITY
+==================================================
+
+ElectricityBill may create a linked Expense.
+
+If linked Expense exists:
+
+count Expense once.
+
+Do NOT count:
+
+ElectricityBill final amount
++
+linked Expense amount
+
+twice.
+
+Verify late fine:
+
+base bill
++
+one-time 5% late fine
+
+Final electricity expense should use the finalized correct amount according to accounting mode.
+
+==================================================
+11. OTHER EXPENSES
+==================================================
+
+Include:
+
+- Maintenance
+- Society
+- Water
+- Internet
+- Cleaning
+- Lift Bill
+- Lift Maintenance
+- Other Expense
+- General Expense
+- Property Expense
+- Unit Expense
+
+Avoid double counting property allocation.
+
+Example:
+
+Property Tank Repair:
+Rs. 20,000
+
+Allocated equally to 10 units:
+Rs. 2,000 each
+
+Financial total must remain:
+Rs. 20,000
+
+NOT:
+Rs. 40,000
+
+==================================================
+12. CASH VIEW EXPENSES
+==================================================
+
+Cash view should normally use actual paid amounts/payment transactions.
+
+Examples:
+
+Electricity bill:
+Rs. 10,000
+
+Paid:
+Rs. 4,000
+
+Cash Expense:
+Rs. 4,000
+
+Outstanding Payable:
+Rs. 6,000
+
+Do not automatically count entire Rs. 10,000 in cash outflow.
+
+==================================================
+13. ACCRUAL VIEW EXPENSES
+==================================================
+
+Accrual view should use recognized expense obligations.
+
+Example:
+
+Electricity:
+Rs. 10,000
+
+Even if only Rs. 4,000 paid:
+
+Accrued Expense:
+Rs. 10,000
+
+Outstanding payable:
+Rs. 6,000
+
+==================================================
+14. PROFIT LOSS FORMULA
+==================================================
+
+ACCRUAL:
+
+Net Profit / Loss =
+Recognized Income
+-
+Recognized Expenses
+
+If positive:
+PROFIT
+
+If negative:
+LOSS
+
+If zero:
+BREAK_EVEN
+
+CASH:
+
+Net Cash Flow =
+Cash Received
+-
+Cash Paid
+
+If Profit/Loss page provides both modes, label them clearly.
+
+==================================================
+15. DATE FILTERS
+==================================================
+
+Verify:
+
+- Today
+- Selected Date
+- Month
+- Year
+- Custom Date Range
+
+Priority:
+
+1. startDate/endDate
+2. selected date
+3. month/year
+4. year
+5. current month default
+
+Use the same resolved date range for all calculations.
+
+Return resolved range from backend.
+
+==================================================
+16. DATE SEMANTICS
+==================================================
+
+CASH VIEW:
+
+Use actual transaction/payment date.
+
+ACCRUAL VIEW:
+
+Use business recognition date:
+
+- booking/revenue period
+- monthly bill period
+- expenseDate / billing period
+
+Use existing project design consistently.
+
+Document every date field used.
+
+==================================================
+17. PROPERTY FILTER
+==================================================
+
+If:
+
+Property = Casa Bella
+
+Profit/Loss must include only:
+
+- Casa Bella income
+- Casa Bella expenses
+- Casa Bella unit-linked transactions
+
+General expenses with no property:
+
+Do not automatically assign to Casa Bella.
+
+Include general expenses only in All Properties / whole-business result unless an explicit allocation exists.
+
+==================================================
+18. UNIT FILTER
+==================================================
+
+If:
+
+Unit = Casa Bella 203
+
+Include only:
+
+- Unit 203 income
+- Unit 203 expenses
+
+Do not include whole-property expenses unless explicitly allocated to Unit 203.
+
+==================================================
+19. OWNER/GENERAL COST ALLOCATION
+==================================================
+
+Do not silently allocate:
+
+- property expenses
+- owner expenses
+- salaries
+- general overhead
+
+to individual units unless the existing system explicitly supports allocation.
+
+Whole-business Profit/Loss may include them.
+
+Property/unit Profit/Loss should explain excluded general overhead in metadata.
+
+==================================================
+20. CREATE/REUSE CANONICAL FINANCIAL SERVICE
+==================================================
+
+If Dashboard and Profit/Loss currently calculate finance differently:
+
+Centralize calculations.
+
+Create/reuse:
+
+FinancialSummaryService
+
+or equivalent.
+
+This service should be the single source for:
+
+- income
+- expenses
+- cash flow
+- profit/loss
+- receivables
+- payables
+- category breakdown
+
+Dashboard and Profit/Loss must call the same calculation source where appropriate.
+
+Do not maintain conflicting formulas.
+
+==================================================
+21. PROFIT LOSS SUMMARY API
+==================================================
+
+Verify/improve:
+
+GET /profit-loss/summary
+
+Response should include:
+
+{
+  period: {
+    startDate,
+    endDate,
+    accountingView
+  },
+
+  income: {
+    dailyGuest,
+    monthlyTenant,
+    ownerReceivableIncome,
+    otherIncome,
+    totalIncome
+  },
+
+  expenses: {
+    electricity,
+    maintenance,
+    society,
+    water,
+    internet,
+    cleaning,
+    liftBill,
+    liftMaintenance,
+    salaries,
+    ownerPayments,
+    otherExpenses,
+    totalExpenses
+  },
+
+  result: {
+    netAmount,
+    resultType
+  },
+
+  receivables: {
+    guestOutstanding,
+    tenantOutstanding,
+    totalOutstanding
+  },
+
+  payables: {
+    expenseOutstanding,
+    ownerOutstanding,
+    salaryOutstanding,
+    totalOutstanding
+  }
+}
+
+Only include owner income/outflow when correctly classified.
+
+==================================================
+22. BREAKDOWN REQUIREMENT
+==================================================
+
+Every Profit/Loss total must have a drill-down/breakdown.
+
+Income:
+
+Daily Guest
+Monthly Tenant
+Owner-related qualifying income
+Other Income
+
+Expenses:
+
+Electricity
+Maintenance
+Society
+Water
+Internet
+Cleaning
+Lift
+Salary
+Owner Payments
+Other
+
+The sum of breakdown must equal total exactly.
+
+==================================================
+23. RECONCILIATION ENDPOINT
+==================================================
+
+For SUPER_ADMIN add or improve:
+
+GET /profit-loss/reconciliation
+
+Filters:
+
+same as Profit/Loss page.
+
+Return:
+
+- calculated result
+- source table totals
+- transaction counts
+- duplicate prevention decisions
+- excluded security deposits
+- reversed/refunded amounts
+- linked-record deduplication totals
+
+Purpose:
+
+make financial audit transparent.
+
+==================================================
+24. DIRECT DATABASE VERIFICATION
+==================================================
+
+After calculation fixes:
+
+Use Prisma/SQL direct aggregates against PostgreSQL.
+
+Compare:
+
+Profit/Loss API
+vs
+Direct database verified totals.
+
+For each:
+
+Income
+Expenses
+Net
+Daily Guest Income
+Monthly Tenant Income
+Electricity
+Salary
+Owner Payments
+Other Expenses
+
+Output:
+
+API Value
+Database Value
+Difference
+
+Required:
+
+Difference = 0
+
+==================================================
+25. CONTROL TEST — PROFIT
+==================================================
+
+Test data:
+
+Monthly Tenant Received:
+Rs. 50,000
+
+Daily Guest Received:
+Rs. 20,000
+
+Expenses:
+Electricity = 10,000
+Maintenance = 5,000
+Salary = 25,000
+
+Expected CASH result:
+
+Income:
+70,000
+
+Expense:
+40,000
+
+Net Cash Flow:
+30,000
+
+==================================================
+26. CONTROL TEST — LOSS
+==================================================
+
+Income:
+Rs. 50,000
+
+Expenses:
+Rs. 80,000
+
+Expected:
+
+Net:
+-30,000
+
+Result:
+LOSS
+
+==================================================
+27. SECURITY DEPOSIT TEST
+==================================================
+
+Rent:
+50,000
+
+Refundable Deposit:
+100,000
+
+Expected P&L revenue:
+
+50,000
+
+Do not count deposit as profit.
+
+==================================================
+28. DOUBLE COUNT TEST
+==================================================
+
+ElectricityBill:
+10,000
+
+Linked Expense:
+10,000
+
+Expected Expense:
+10,000
+
+NOT:
+20,000
+
+Salary:
+
+Advance 5,000
+Salary payment 20,000
+Recognized salary 25,000
+
+Expected accrual salary:
+25,000
+
+Expected actual total salary cash paid:
+25,000
+
+==================================================
+29. FILTER TESTS
+==================================================
+
+Verify Profit/Loss using:
+
+- Today
+- August 2026
+- Full Year 2026
+- Custom Range
+- Casa Bella
+- Specific Unit
+
+No stale totals.
+
+No all-time data leaking into selected-period totals.
+
+==================================================
+30. FINAL PROFIT/LOSS AUDIT REPORT
+==================================================
+
+At completion output:
+
+PROFIT & LOSS AUDIT
+
+Accounting modes supported:
+...
+
+Income formula:
+...
+
+Expense formula:
+...
+
+Daily Guest total:
+...
+
+Monthly Tenant total:
+...
+
+Security deposits excluded:
+...
+
+Owner income/outflow treatment:
+...
+
+Electricity:
+...
+
+Salary:
+...
+
+Other Expenses:
+...
+
+Total Income:
+...
+
+Total Expenses:
+...
+
+Net:
+...
+
+Result:
+PROFIT / LOSS / BREAK_EVEN
+
+Double-counting bugs found:
+...
+
+Filter bugs found:
+...
+
+Corrections made:
+...
+
+Direct DB reconciliation:
+...
+
+Only state:
+
+PROFIT & LOSS RECONCILIATION: PASSED
+
+if every relevant API total equals independently verified database totals.
+
+Otherwise state:
+
+PROFIT & LOSS RECONCILIATION: FAILED
+
+and list discrepancies.
+
+==================================================
+TASK B — SIMPLIFY SIDEBAR
+==================================================
+
+Temporarily hide these modules from the sidebar:
+
+- Reports
+- Approvals
+- Notifications
+- Inventory
+
+IMPORTANT:
+
+DO NOT delete their code.
+
+DO NOT delete database tables.
+
+DO NOT delete API routes.
+
+DO NOT delete backend services.
+
+DO NOT remove migrations.
+
+DO NOT remove existing permissions.
+
+Only hide them from the visible application navigation for now.
+
+==================================================
+31. SIDEBAR SHOULD SHOW
+==================================================
+
+Keep only the currently required main modules:
+
+- Dashboard
+- Properties
+- Rooms & Apartments
+- Monthly Tenants
+- Daily Guests
+- Payments
+- Expenses
+- Owners
+- Employees
+
+Then lower/system section:
+
+- Audit Log
+- Settings
+- System Backup
+- Logout
+
+Keep role restrictions.
+
+==================================================
+32. HIDE THESE ITEMS
+==================================================
+
+Hide:
+
+Inventory
+Reports
+Approvals
+Notifications
+
+Do not show empty separators where they used to exist.
+
+Keep sidebar visually compact.
+
+==================================================
+33. DO NOT BREAK DIRECT ROUTES
+==================================================
+
+For now, existing direct URLs may continue to exist if technically required.
+
+Example:
+
+/reports
+/approvals
+/notifications
+/inventory
+
+Do not remove routes unless explicitly requested later.
+
+This task is UI navigation simplification only.
+
+==================================================
+34. USE FEATURE FLAGS IF EASY
+==================================================
+
+If project already has feature flags/settings:
+
+Use them.
+
+Example:
+
+FEATURE_INVENTORY=false
+FEATURE_REPORTS=false
+FEATURE_APPROVALS=false
+FEATURE_NOTIFICATIONS=false
+
+Otherwise create a simple frontend navigation configuration such as:
+
+const enabledModules = {
+  inventory: false,
+  reports: false,
+  approvals: false,
+  notifications: false
+}
+
+Do not introduce a complex new feature-flag system just for this task.
+
+==================================================
+35. EMPLOYEE VISIBILITY
+==================================================
+
+Remember:
+
+Employees / Salaries module is SUPER_ADMIN ONLY according to current business requirements.
+
+Therefore:
+
+SUPER_ADMIN:
+show Employees
+
+ADMIN:
+hide Employees
+
+RECEPTIONIST:
+hide Employees
+
+Backend 403 must remain.
+
+==================================================
+36. OWNER VISIBILITY
+==================================================
+
+Owner module contains sensitive finance.
+
+Keep existing role behavior.
+
+If Owner module is currently Super Admin-only or permission restricted, preserve that behavior.
+
+Do not make it visible merely because it is listed in the master sidebar configuration.
+
+==================================================
+37. SIDEBAR TEST
+==================================================
+
+Test SUPER_ADMIN sidebar.
+
+Should NOT show:
+
+- Inventory
+- Reports
+- Approvals
+- Notifications
+
+Should show required modules.
+
+Test ADMIN sidebar.
+
+Verify restricted finance/employee modules remain hidden according to permissions.
+
+Test RECEPTIONIST sidebar.
+
+Verify only operational permitted modules appear.
+
+==================================================
+38. BUILD TEST
+==================================================
+
+After both tasks:
+
+Run frontend production build.
+
+Run backend tests.
+
+Fix:
+
+- TypeScript errors
+- unused imports
+- broken navigation
+- financial-test failures
+- stale calculations
+- Prisma errors
+
+Do not silence test failures.
+
+==================================================
+39. FINAL OUTPUT
+==================================================
+
+At end provide two sections.
+
+A. PROFIT & LOSS VERIFICATION
+
+- current formulas found
+- errors found
+- corrections made
+- canonical data sources
+- cash vs accrual behavior
+- owner treatment
+- salary treatment
+- electricity treatment
+- security deposit treatment
+- duplicate prevention
+- filter tests
+- reconciliation result
+
+B. SIDEBAR SIMPLIFICATION
+
+- hidden modules
+- retained modules
+- files changed
+- whether feature flags/config were used
+- confirmation that hidden modules were NOT deleted
+- role visibility test results
+
+Do not modify unrelated business behavior.
+Do not reset the database.
+Do not hardcode totals.
+Do not fabricate successful reconciliation.
+</user_query>

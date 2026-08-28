@@ -1,0 +1,1538 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  RECEPTIONIST
+}
+
+enum ApprovalModuleName {
+  PROPERTY
+  UNITS
+  MONTHLY_TENANTS
+  BOOKINGS
+  PAYMENTS
+  EXPENSES
+  ELECTRICITY
+  OWNERS
+  EMPLOYEES
+  SALARY
+  INVENTORY
+  SETTINGS
+}
+
+enum ApprovalActionType {
+  CREATE
+  UPDATE
+  DELETE
+  ARCHIVE
+  RESTORE
+  APPROVE
+  REJECT
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ApprovalPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum NotificationType {
+  APPROVAL_REQUESTED
+  APPROVAL_APPROVED
+  APPROVAL_REJECTED
+  SYSTEM
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  REMINDER
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum SettingCategory {
+  BUSINESS
+  FINANCE
+  ELECTRICITY
+  NUMBERING
+  DASHBOARD
+  BOOKING
+  PAYMENT
+  EXPENSE
+  INVENTORY
+  SALARY
+  SECURITY
+  DOCUMENTS
+  APPEARANCE
+  SYSTEM
+}
+
+enum SettingDataType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+  DATE
+  COLOR
+}
+
+enum BackupType {
+  MANUAL
+  SCHEDULED
+  PRE_RESTORE
+}
+
+enum BackupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  DELETED
+}
+
+enum BackupStorageType {
+  LOCAL
+  CLOUD
+}
+
+enum RestoreStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+enum UnitType {
+  ROOM
+  APARTMENT
+}
+
+enum UnitStatus {
+  AVAILABLE
+  OCCUPIED
+  CLEANING_REQUIRED
+  MONTHLY_TENANT_VACANT
+  MAINTENANCE
+  BLOCKED
+}
+
+enum MonthlyOccupancyState {
+  OCCUPIED
+  EMPTY
+}
+
+enum MonthlyTenancyStatus {
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum MonthlyAgreementStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum MonthlyBillPaymentStatus {
+  UNPAID
+  ADVANCE
+  PARTIAL
+  HALF_PAID
+  PAID
+  OVERDUE
+  OVERPAID
+}
+
+enum SettlementType {
+  FIXED_AMOUNT
+  PERCENTAGE
+  NO_TENANT_SHARE
+  RENT_CREDIT
+  CUSTOM
+}
+
+enum SettlementStatus {
+  DRAFT
+  APPROVED
+  SETTLED
+  CANCELLED
+}
+
+enum OccupancySource {
+  NORMAL_HOTEL_UNIT
+  HOTEL_GUEST_ON_TENANT_UNIT
+}
+
+enum BookingType {
+  HOURLY
+  DAILY
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentState {
+  UNPAID
+  ADVANCE
+  PARTIAL
+  HALF_PAID
+  PAID
+  OVERPAID
+  REFUNDED
+  REVERSED
+}
+
+enum PaymentForType {
+  BOOKING
+  MONTHLY_TENANCY
+  MONTHLY_BILL
+  OWNER
+  SALARY
+  EXPENSE
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  EASYPAISA
+  JAZZCASH
+  OTHER
+}
+
+enum PaymentTransactionType {
+  PAYMENT
+  REFUND
+  REVERSAL
+  ADJUSTMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  REVERSED
+  REFUNDED
+  CANCELLED
+}
+
+enum ExpenseScope {
+  GENERAL
+  PROPERTY
+  UNIT
+  BOOKING
+  MONTHLY_TENANCY
+  EMPLOYEE
+  OWNER
+}
+
+enum ExpensePaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum InventoryMovementType {
+  PURCHASE
+  ISSUE
+  RETURN
+  TRANSFER
+  ADJUSTMENT
+  DAMAGE
+  LOSS
+}
+
+enum RoomAssetCondition {
+  GOOD
+  FAIR
+  DAMAGED
+  UNDER_REPAIR
+  REPLACED
+  MISSING
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  RESIGNED
+  TERMINATED
+}
+
+enum SalaryPaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum SalaryTransactionType {
+  SALARY_PAYMENT
+  ADVANCE
+  DEDUCTION
+  BONUS
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum SalaryAdjustmentDirection {
+  INCREASE
+  DECREASE
+}
+
+enum OwnerAccountDirection {
+  RECEIVABLE_FROM_OWNER
+  PAYABLE_TO_OWNER
+}
+
+enum OwnerAssignmentStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
+enum OwnerStatementPaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+  OVERPAID
+}
+
+model SystemSetting {
+  id              Int             @id @default(autoincrement())
+  key             String          @unique
+  value           String
+  category        SettingCategory @default(BUSINESS)
+  dataType        SettingDataType @default(STRING)
+  description     String?
+  isSensitive     Boolean         @default(false)
+  isPublic        Boolean         @default(false)
+  updatedByUserId String?
+  updatedBy       User?           @relation("SettingUpdatedBy", fields: [updatedByUserId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+}
+
+model User {
+  id                             String                   @id @default(uuid())
+  fullName                       String
+  email                          String                   @unique
+  phone                          String
+  password                       String
+  role                           Role
+  status                         Status                   @default(ACTIVE)
+  /// Explicit Super Admin grant for Admin users to view/manage salary amounts
+  canAccessSalary                Boolean                  @default(false)
+  /// Explicit Super Admin grant for Admin users to view Profit & Loss reports
+  canAccessProfitLoss            Boolean                  @default(false)
+  failedLoginAttempts            Int                      @default(0)
+  lockedUntil                    DateTime?
+  lastLoginAt                    DateTime?
+  passwordChangedAt              DateTime?
+  forcePasswordChange            Boolean                  @default(false)
+  /// Bumped to invalidate existing JWTs after password change
+  tokenVersion                   Int                      @default(0)
+  createdAt                      DateTime                 @default(now())
+  updatedAt                      DateTime                 @updatedAt
+  bookingsCreated                Booking[]                @relation("BookingCreatedBy")
+  bookingsCheckedOut             Booking[]                @relation("BookingCheckedOutBy")
+  paymentsCreated                Payment[]                @relation("PaymentCreatedBy")
+  paymentsApproved               Payment[]                @relation("PaymentApprovedBy")
+  expensesCreated                Expense[]                @relation("ExpenseCreatedBy")
+  expensesApproved               Expense[]                @relation("ExpenseApprovedBy")
+  electricityReadings            ElectricityReading[]
+  electricityRateChanges         ElectricityRateHistory[] @relation("ElectricityRateChangedBy")
+  expensePaymentsCreated         ExpensePayment[]         @relation("ExpensePaymentCreatedBy")
+  salaryRecordsCreated           SalaryRecord[]           @relation("SalaryRecordCreatedBy")
+  salaryRecordsApproved          SalaryRecord[]           @relation("SalaryRecordApprovedBy")
+  salaryTransactionsCreated      SalaryTransaction[]      @relation("SalaryTransactionCreatedBy")
+  salaryTransactionsApproved     SalaryTransaction[]      @relation("SalaryTransactionApprovedBy")
+  salaryRevisionsChanged         SalaryRevision[]         @relation("SalaryRevisionChangedBy")
+  inventoryMovementsCreated      InventoryMovement[]      @relation("InventoryMovementCreatedBy")
+  inventoryMovementsApproved     InventoryMovement[]      @relation("InventoryMovementApprovedBy")
+  roomAssetHistories             RoomAssetHistory[]
+  approvalRequestsCreated        ApprovalRequest[]        @relation("ApprovalRequestedBy")
+  approvalRequestsReviewed       ApprovalRequest[]        @relation("ApprovalApprovedBy")
+  auditLogs                      AuditLog[]
+  notifications                  Notification[]
+  settingsUpdated                SystemSetting[]          @relation("SettingUpdatedBy")
+  backupsCreated                 BackupRecord[]           @relation("BackupCreatedBy")
+  backupsRestored                BackupRecord[]           @relation("BackupRestoredBy")
+  restoresPerformed              RestoreHistory[]         @relation("RestorePerformedBy")
+  hotelUsesCreated               TenantUnitHotelUse[]     @relation("HotelUseCreatedBy")
+  hotelUsesApproved              TenantUnitHotelUse[]     @relation("HotelUseApprovedBy")
+  rentCreditsApproved            RentCredit[]             @relation("RentCreditApprovedBy")
+  ownerAgreementRevisionsCreated OwnerAgreementRevision[] @relation("OwnerAgreementRevisionCreatedBy")
+  rentRevisionsChanged           RentRevision[]           @relation("RentRevisionChangedBy")
+}
+
+model ApprovalRequest {
+  id              String             @id @default(uuid())
+  moduleName      ApprovalModuleName
+  recordId        String
+  actionType      ApprovalActionType
+  requestedById   String
+  requestedBy     User               @relation("ApprovalRequestedBy", fields: [requestedById], references: [id])
+  approvedById    String?
+  approvedBy      User?              @relation("ApprovalApprovedBy", fields: [approvedById], references: [id])
+  requestedDate   DateTime           @default(now())
+  approvedDate    DateTime?
+  status          ApprovalStatus     @default(PENDING)
+  oldData         Json?
+  newData         Json?
+  reason          String?
+  rejectionReason String?
+  priority        ApprovalPriority   @default(NORMAL)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([moduleName])
+  @@index([recordId])
+  @@index([actionType])
+  @@index([status])
+  @@index([priority])
+  @@index([requestedById])
+  @@index([approvedById])
+  @@index([requestedDate])
+  @@index([moduleName, recordId, status])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  module    String
+  action    String
+  recordId  String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  role      String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  device    String?
+  browser   String?
+  os        String?
+  createdAt DateTime @default(now())
+
+  @@index([module])
+  @@index([action])
+  @@index([recordId])
+  @@index([userId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Notification {
+  id            String               @id @default(uuid())
+  userId        String
+  user          User                 @relation(fields: [userId], references: [id])
+  type          NotificationType
+  title         String
+  message       String
+  relatedModule String?
+  relatedId     String?
+  priority      NotificationPriority @default(NORMAL)
+  actionUrl     String?
+  icon          String?
+  recipientRole Role?
+  isRead        Boolean              @default(false)
+  readAt        DateTime?
+  /// Deduplication key — e.g. "TENANT_RENT_OVERDUE:<tenancyId>:2026-08".
+  /// One active (unresolved) notification per key per user.
+  dedupeKey     String?
+  /// Resolved means the underlying issue is fixed (≠ read).
+  isResolved    Boolean              @default(false)
+  resolvedAt    DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([userId, isRead])
+  @@index([userId, dedupeKey])
+  @@index([dedupeKey])
+  @@index([createdAt])
+  @@index([type])
+  @@index([priority])
+  @@index([expiresAt])
+  @@index([isResolved])
+}
+
+model BackupRecord {
+  id                 String            @id @default(uuid())
+  backupNumber       String            @unique
+  backupType         BackupType
+  storageType        BackupStorageType @default(LOCAL)
+  fileName           String
+  filePath           String
+  fileSizeBytes      BigInt?
+  checksum           String?
+  databaseName       String
+  databaseVersion    String?
+  applicationVersion String?
+  status             BackupStatus      @default(PENDING)
+  startedAt          DateTime          @default(now())
+  completedAt        DateTime?
+  failureReason      String?
+  notes              String?
+  createdByUserId    String
+  createdBy          User              @relation("BackupCreatedBy", fields: [createdByUserId], references: [id])
+  restoredByUserId   String?
+  restoredBy         User?             @relation("BackupRestoredBy", fields: [restoredByUserId], references: [id])
+  restoredAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  restoreHistories   RestoreHistory[]  @relation("RestoreBackup")
+  preRestoreFor      RestoreHistory[]  @relation("PreRestoreBackup")
+
+  @@index([status])
+  @@index([backupType])
+  @@index([createdAt])
+  @@index([createdByUserId])
+}
+
+model RestoreHistory {
+  id                 String        @id @default(uuid())
+  backupId           String
+  backup             BackupRecord  @relation("RestoreBackup", fields: [backupId], references: [id])
+  startedAt          DateTime      @default(now())
+  completedAt        DateTime?
+  status             RestoreStatus @default(PENDING)
+  reason             String
+  confirmationText   String
+  preRestoreBackupId String?
+  preRestoreBackup   BackupRecord? @relation("PreRestoreBackup", fields: [preRestoreBackupId], references: [id])
+  restoredByUserId   String
+  restoredBy         User          @relation("RestorePerformedBy", fields: [restoredByUserId], references: [id])
+  failureReason      String?
+  createdAt          DateTime      @default(now())
+
+  @@index([backupId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model Property {
+  id                       String                  @id @default(uuid())
+  name                     String
+  address                  String
+  city                     String
+  description              String?
+  isActive                 Boolean                 @default(true)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  units                    Unit[]
+  expenses                 Expense[]
+  electricityReadings      ElectricityReading[]
+  roomAssets               RoomAsset[]
+  inventoryMovementsSource InventoryMovement[]     @relation("MovementSourceProperty")
+  inventoryMovementsDest   InventoryMovement[]     @relation("MovementDestinationProperty")
+  ownerUnitAssignments     OwnerUnitAssignment[]
+  ownerMonthlyStatements   OwnerMonthlyStatement[]
+}
+
+model Unit {
+  id                       String                  @id @default(uuid())
+  propertyId               String
+  property                 Property                @relation(fields: [propertyId], references: [id])
+  unitNumber               String
+  unitType                 UnitType
+  floor                    Int?
+  bedrooms                 Int?
+  monthlyRent              Decimal?                @db.Decimal(12, 2)
+  dailyRate                Decimal?                @db.Decimal(12, 2)
+  hourlyRate               Decimal?                @db.Decimal(12, 2)
+  status                   UnitStatus              @default(AVAILABLE)
+  notes                    String?
+  isActive                 Boolean                 @default(true)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  tenancies                MonthlyTenancy[]
+  bookings                 Booking[]
+  expenses                 Expense[]
+  electricityReadings      ElectricityReading[]
+  roomAssets               RoomAsset[]
+  inventoryMovementsSource InventoryMovement[]     @relation("MovementSourceUnit")
+  inventoryMovementsDest   InventoryMovement[]     @relation("MovementDestinationUnit")
+  ownerUnitAssignments     OwnerUnitAssignment[]
+  ownerMonthlyStatements   OwnerMonthlyStatement[]
+
+  @@unique([propertyId, unitNumber])
+  @@index([propertyId])
+  @@index([unitType])
+  @@index([status])
+  @@index([isActive])
+}
+
+model MonthlyTenant {
+  id                    String             @id @default(uuid())
+  fullName              String
+  phone                 String
+  alternatePhone        String?
+  email                 String?
+  cnic                  String?            @unique
+  address               String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  notes                 String?
+  isActive              Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  tenancies             MonthlyTenancy[]
+  agreements            MonthlyAgreement[]
+
+  @@index([phone])
+  @@index([isActive])
+}
+
+/// Contract-level monthly rental agreement (may cover multiple unit assignments).
+model MonthlyAgreement {
+  id              String                 @id @default(uuid())
+  tenantId        String
+  tenant          MonthlyTenant          @relation(fields: [tenantId], references: [id])
+  agreementNumber String                 @unique
+  agreementStart  DateTime
+  agreementEnd    DateTime?
+  /// Day of month rent is due (1–28).
+  billingDay      Int                    @default(1)
+  securityDeposit Decimal                @default(0) @db.Decimal(12, 2)
+  status          MonthlyAgreementStatus @default(DRAFT)
+  notes           String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  endedAt         DateTime?
+  assignments     MonthlyTenancy[]
+  bills           MonthlyBill[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([agreementStart])
+  @@index([billingDay])
+}
+
+/// Per-agreement monthly bill. Totals are recalculated from Payment records.
+model MonthlyBill {
+  id                 String                   @id @default(uuid())
+  agreementId        String
+  agreement          MonthlyAgreement         @relation(fields: [agreementId], references: [id])
+  billingMonth       Int
+  billingYear        Int
+  baseRent           Decimal                  @default(0) @db.Decimal(12, 2)
+  electricityCharges Decimal                  @default(0) @db.Decimal(12, 2)
+  maintenanceCharges Decimal                  @default(0) @db.Decimal(12, 2)
+  societyCharges     Decimal                  @default(0) @db.Decimal(12, 2)
+  cleaningCharges    Decimal                  @default(0) @db.Decimal(12, 2)
+  laundryCharges     Decimal                  @default(0) @db.Decimal(12, 2)
+  waterCharges       Decimal                  @default(0) @db.Decimal(12, 2)
+  otherCharges       Decimal                  @default(0) @db.Decimal(12, 2)
+  previousBalance    Decimal                  @default(0) @db.Decimal(12, 2)
+  credits            Decimal                  @default(0) @db.Decimal(12, 2)
+  totalPayable       Decimal                  @default(0) @db.Decimal(12, 2)
+  totalReceived      Decimal                  @default(0) @db.Decimal(12, 2)
+  remainingBalance   Decimal                  @default(0) @db.Decimal(12, 2)
+  dueDate            DateTime
+  paymentStatus      MonthlyBillPaymentStatus @default(UNPAID)
+  finalized          Boolean                  @default(false)
+  notes              String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  payments           Payment[]
+
+  @@unique([agreementId, billingMonth, billingYear])
+  @@index([agreementId])
+  @@index([billingMonth, billingYear])
+  @@index([paymentStatus])
+  @@index([dueDate])
+  @@index([finalized])
+}
+
+/// Unit assignment under a MonthlyAgreement.
+/// Table name kept as MonthlyTenancy for Payment/HotelUse/Expense FK stability.
+model MonthlyTenancy {
+  id                 String                @id @default(uuid())
+  tenantId           String
+  tenant             MonthlyTenant         @relation(fields: [tenantId], references: [id])
+  /// Owning agreement. Required after migration backfill.
+  agreementId        String
+  agreement          MonthlyAgreement      @relation(fields: [agreementId], references: [id])
+  unitId             String
+  unit               Unit                  @relation(fields: [unitId], references: [id])
+  /// Assignment start (historically named agreementStart).
+  agreementStart     DateTime
+  agreementEnd       DateTime?
+  /// @deprecated Prefer MonthlyAgreement.securityDeposit for new writes.
+  securityDeposit    Decimal               @default(0) @db.Decimal(12, 2)
+  monthlyRent        Decimal               @db.Decimal(12, 2)
+  /// @deprecated Prefer MonthlyBill charge lines for period billing.
+  maintenanceCharges Decimal               @default(0) @db.Decimal(12, 2)
+  laundryCharges     Decimal               @default(0) @db.Decimal(12, 2)
+  cleaningCharges    Decimal               @default(0) @db.Decimal(12, 2)
+  waterCharges       Decimal               @default(0) @db.Decimal(12, 2)
+  societyCharges     Decimal               @default(0) @db.Decimal(12, 2)
+  electricityCharges Decimal               @default(0) @db.Decimal(12, 2)
+  otherCharges       Decimal               @default(0) @db.Decimal(12, 2)
+  previousBalance    Decimal               @default(0) @db.Decimal(12, 2)
+  /// @deprecated Prefer MonthlyBill totals; kept for legacy payment rollups.
+  totalPayable       Decimal               @default(0) @db.Decimal(12, 2)
+  totalReceived      Decimal               @default(0) @db.Decimal(12, 2)
+  remainingBalance   Decimal               @default(0) @db.Decimal(12, 2)
+  occupancyState     MonthlyOccupancyState
+  /// When true, empty assigned units may host temporary hotel guests.
+  hotelUseAllowed    Boolean               @default(false)
+  tenancyStatus      MonthlyTenancyStatus  @default(ACTIVE)
+  notes              String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  endedAt            DateTime?
+  payments           Payment[]
+  expenses           Expense[]
+  inventoryMovements InventoryMovement[]
+  hotelUses          TenantUnitHotelUse[]
+  rentCredits        RentCredit[]
+  rentRevisions      RentRevision[]
+
+  @@index([tenantId])
+  @@index([agreementId])
+  @@index([unitId])
+  @@index([tenancyStatus])
+  @@index([occupancyState])
+  @@index([hotelUseAllowed])
+  @@index([agreementStart])
+}
+
+/// Immutable audit trail of every rent change on a unit assignment.
+/// Bills already generated before effectiveFrom must never be touched.
+model RentRevision {
+  id              String         @id @default(uuid())
+  tenancyId       String
+  tenancy         MonthlyTenancy @relation(fields: [tenancyId], references: [id])
+  oldRent         Decimal        @db.Decimal(12, 2)
+  newRent         Decimal        @db.Decimal(12, 2)
+  /// The first billing month for which newRent applies.
+  effectiveFrom   DateTime
+  reason          String?
+  changedByUserId String?
+  changedBy       User?          @relation("RentRevisionChangedBy", fields: [changedByUserId], references: [id])
+  createdAt       DateTime       @default(now())
+
+  @@index([tenancyId])
+  @@index([effectiveFrom])
+  @@index([changedByUserId])
+}
+
+model Guest {
+  id                    String    @id @default(uuid())
+  fullName              String
+  phone                 String
+  alternatePhone        String?
+  email                 String?
+  cnicOrPassport        String?
+  address               String?
+  nationality           String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  vehicleNumber         String?
+  notes                 String?
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  bookings              Booking[]
+
+  @@index([phone])
+  @@index([cnicOrPassport])
+  @@index([isActive])
+}
+
+model Booking {
+  id                      String              @id @default(uuid())
+  bookingNumber           String              @unique
+  guestId                 String
+  guest                   Guest               @relation(fields: [guestId], references: [id])
+  unitId                  String
+  unit                    Unit                @relation(fields: [unitId], references: [id])
+  bookingType             BookingType
+  checkInDateTime         DateTime
+  checkOutDateTime        DateTime
+  hourlyRate              Decimal?            @db.Decimal(12, 2)
+  dailyRate               Decimal?            @db.Decimal(12, 2)
+  numberOfHours           Int?
+  numberOfDays            Int?
+  roomCharges             Decimal             @default(0) @db.Decimal(12, 2)
+  electricityCharges      Decimal             @default(0) @db.Decimal(12, 2)
+  cleaningCharges         Decimal             @default(0) @db.Decimal(12, 2)
+  laundryCharges          Decimal             @default(0) @db.Decimal(12, 2)
+  maintenanceCharges      Decimal             @default(0) @db.Decimal(12, 2)
+  otherCharges            Decimal             @default(0) @db.Decimal(12, 2)
+  /**
+   * Guest-bill amenity description. Not an operating expense.
+   */
+  otherChargesDescription String?
+  discountAmount          Decimal             @default(0) @db.Decimal(12, 2)
+  totalAmount             Decimal             @default(0) @db.Decimal(12, 2)
+  receivedAmount          Decimal             @default(0) @db.Decimal(12, 2)
+  remainingAmount         Decimal             @default(0) @db.Decimal(12, 2)
+  paymentState            PaymentState        @default(UNPAID)
+  bookingStatus           BookingStatus       @default(PENDING)
+  occupancySource         OccupancySource     @default(NORMAL_HOTEL_UNIT)
+  numberOfGuests          Int                 @default(1)
+  adults                  Int?
+  children                Int?
+  bookingSource           String?
+  notes                   String?
+  actualCheckInAt         DateTime?
+  actualCheckOutAt        DateTime?
+  /**
+   * Original vs revised checkout amounts; not extra revenue.
+   */
+  checkoutFinance         Json?
+  cleaningCleared         Boolean             @default(false)
+  accountsCleared         Boolean             @default(false)
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  cancelledAt             DateTime?
+  createdByUserId         String?
+  createdBy               User?               @relation("BookingCreatedBy", fields: [createdByUserId], references: [id])
+  checkedOutByUserId      String?
+  checkedOutBy            User?               @relation("BookingCheckedOutBy", fields: [checkedOutByUserId], references: [id])
+  payments                Payment[]
+  expenses                Expense[]
+  inventoryMovements      InventoryMovement[]
+  hotelUse                TenantUnitHotelUse?
+
+  @@index([guestId])
+  @@index([unitId])
+  @@index([bookingType])
+  @@index([bookingStatus])
+  @@index([occupancySource])
+  @@index([paymentState])
+  @@index([checkInDateTime])
+  @@index([checkOutDateTime])
+  @@index([createdByUserId])
+  @@index([checkedOutByUserId])
+}
+
+/// Temporary hotel guest placement on a monthly-tenant-assigned empty unit.
+/// `monthlyTenancyId` is the tenant unit assignment (MonthlyTenancy).
+model TenantUnitHotelUse {
+  id                          String           @id @default(uuid())
+  monthlyTenancyId            String
+  monthlyTenancy              MonthlyTenancy   @relation(fields: [monthlyTenancyId], references: [id])
+  bookingId                   String?          @unique
+  booking                     Booking?         @relation(fields: [bookingId], references: [id])
+  settlementType              SettlementType
+  totalGuestCharge            Decimal          @db.Decimal(12, 2)
+  tenantShare                 Decimal          @db.Decimal(12, 2)
+  organizationShare           Decimal          @db.Decimal(12, 2)
+  tenantSharePercentage       Decimal?         @db.Decimal(5, 2)
+  organizationSharePercentage Decimal?         @db.Decimal(5, 2)
+  rentCreditAmount            Decimal          @default(0) @db.Decimal(12, 2)
+  status                      SettlementStatus @default(DRAFT)
+  reason                      String?
+  billingMonth                Int?
+  billingYear                 Int?
+  createdByUserId             String
+  createdBy                   User             @relation("HotelUseCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId            String?
+  approvedBy                  User?            @relation("HotelUseApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt                  DateTime?
+  settledAt                   DateTime?
+  cancelledAt                 DateTime?
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
+  rentCredits                 RentCredit[]
+
+  @@index([monthlyTenancyId])
+  @@index([status])
+  @@index([settlementType])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+  @@index([createdAt])
+  @@index([billingMonth, billingYear])
+}
+
+/// Explicit rent-credit ledger for RENT_CREDIT hotel-use settlements.
+model RentCredit {
+  id               String             @id @default(uuid())
+  monthlyTenancyId String
+  monthlyTenancy   MonthlyTenancy     @relation(fields: [monthlyTenancyId], references: [id])
+  hotelUseId       String
+  hotelUse         TenantUnitHotelUse @relation(fields: [hotelUseId], references: [id])
+  amount           Decimal            @db.Decimal(12, 2)
+  billingMonth     Int
+  billingYear      Int
+  reason           String
+  creditDate       DateTime
+  paymentId        String?            @unique
+  payment          Payment?           @relation(fields: [paymentId], references: [id])
+  approvedByUserId String
+  approvedBy       User               @relation("RentCreditApprovedBy", fields: [approvedByUserId], references: [id])
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([monthlyTenancyId])
+  @@index([hotelUseId])
+  @@index([billingMonth, billingYear])
+  @@index([creditDate])
+  @@index([approvedByUserId])
+}
+
+model ExpenseCategory {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  isSystem    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expenses    Expense[]
+
+  @@index([isActive])
+}
+
+model Expense {
+  id                    String               @id @default(uuid())
+  expenseNumber         String               @unique
+  categoryId            String
+  category              ExpenseCategory      @relation(fields: [categoryId], references: [id])
+  /// Display name (custom Other expenses); falls back to category.name when null
+  expenseName           String?
+  expenseScope          ExpenseScope
+  propertyId            String?
+  property              Property?            @relation(fields: [propertyId], references: [id])
+  unitId                String?
+  unit                  Unit?                @relation(fields: [unitId], references: [id])
+  bookingId             String?
+  booking               Booking?             @relation(fields: [bookingId], references: [id])
+  monthlyTenancyId      String?
+  monthlyTenancy        MonthlyTenancy?      @relation(fields: [monthlyTenancyId], references: [id])
+  employeeId            String?
+  employee              Employee?            @relation(fields: [employeeId], references: [id])
+  /// When a WHOLE_PROPERTY (PROPERTY) expense is allocated to units, parent is excluded from P&L
+  parentExpenseId       String?
+  parentExpense         Expense?             @relation("ExpenseAllocation", fields: [parentExpenseId], references: [id])
+  childExpenses         Expense[]            @relation("ExpenseAllocation")
+  /// True for allocation parent headers — counted in lists, excluded from P&L/dashboard totals
+  excludeFromFinancials Boolean              @default(false)
+  expenseDate           DateTime
+  amount                Decimal              @db.Decimal(12, 2)
+  paidAmount            Decimal              @default(0) @db.Decimal(12, 2)
+  remainingAmount       Decimal              @default(0) @db.Decimal(12, 2)
+  paymentStatus         ExpensePaymentStatus @default(UNPAID)
+  paymentMethod         PaymentMethod?
+  vendorName            String?
+  referenceNumber       String?
+  description           String?
+  receiptUrl            String?
+  /// Optional structured fields (e.g. rent billingMonth/year, dueDate, payeeName)
+  metadata              Json?
+  createdByUserId       String
+  createdBy             User                 @relation("ExpenseCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId      String?
+  approvedBy            User?                @relation("ExpenseApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt            DateTime?
+  isFinalized           Boolean              @default(false)
+  isActive              Boolean              @default(true)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  /// Billing period (preferred over metadata for monthly filters)
+  billingMonth          Int?
+  billingYear           Int?
+  dueDate               DateTime?
+  paymentDate           DateTime?
+  bankName              String?
+  notes                 String?
+  electricityReading    ElectricityReading?
+  salaryTransaction     SalaryTransaction?
+  inventoryMovements    InventoryMovement[]
+  roomAssetHistories    RoomAssetHistory[]
+  payments              ExpensePayment[]
+
+  @@index([categoryId])
+  @@index([expenseScope])
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([bookingId])
+  @@index([monthlyTenancyId])
+  @@index([employeeId])
+  @@index([parentExpenseId])
+  @@index([excludeFromFinancials])
+  @@index([expenseName])
+  @@index([paymentStatus])
+  @@index([expenseDate])
+  @@index([expenseDate, isActive])
+  @@index([billingMonth, billingYear])
+  @@index([dueDate])
+  @@index([isFinalized])
+  @@index([isActive])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+}
+
+model ExpensePayment {
+  id                   String        @id @default(uuid())
+  expenseId            String
+  expense              Expense       @relation(fields: [expenseId], references: [id])
+  amount               Decimal       @db.Decimal(12, 2)
+  paymentDate          DateTime
+  paymentMethod        PaymentMethod
+  bankName             String?
+  transactionReference String?
+  notes                String?
+  isReversed           Boolean       @default(false)
+  reversedAt           DateTime?
+  reversalReason       String?
+  createdByUserId      String
+  createdBy            User          @relation("ExpensePaymentCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([expenseId])
+  @@index([paymentDate])
+  @@index([createdByUserId])
+  @@index([isReversed])
+}
+
+model Employee {
+  id                    String              @id @default(uuid())
+  employeeCode          String              @unique
+  fullName              String
+  fatherOrSpouseName    String?
+  phone                 String
+  alternatePhone        String?
+  email                 String?
+  cnic                  String?             @unique
+  address               String?
+  city                  String?
+  position              String
+  department            String?
+  joiningDate           DateTime
+  monthlySalary         Decimal             @db.Decimal(12, 2)
+  bankName              String?
+  accountTitle          String?
+  accountNumberOrIban   String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  status                EmployeeStatus      @default(ACTIVE)
+  notes                 String?
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  salaryRecords         SalaryRecord[]
+  salaryTransactions    SalaryTransaction[]
+  salaryRevisions       SalaryRevision[]
+  expenses              Expense[]
+  inventoryMovements    InventoryMovement[]
+
+  @@index([status])
+  @@index([department])
+  @@index([position])
+  @@index([isActive])
+  @@index([fullName])
+  @@index([phone])
+}
+
+model SalaryRevision {
+  id              String   @id @default(uuid())
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  oldSalary       Decimal  @db.Decimal(12, 2)
+  newSalary       Decimal  @db.Decimal(12, 2)
+  effectiveMonth  Int
+  effectiveYear   Int
+  reason          String
+  changedByUserId String
+  changedBy       User     @relation("SalaryRevisionChangedBy", fields: [changedByUserId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([employeeId, effectiveYear, effectiveMonth])
+  @@index([changedByUserId])
+}
+
+model SalaryRecord {
+  id               String              @id @default(uuid())
+  employeeId       String
+  employee         Employee            @relation(fields: [employeeId], references: [id])
+  salaryMonth      Int
+  salaryYear       Int
+  baseSalary       Decimal             @db.Decimal(12, 2)
+  totalAdvance     Decimal             @default(0) @db.Decimal(12, 2)
+  totalDeductions  Decimal             @default(0) @db.Decimal(12, 2)
+  totalBonus       Decimal             @default(0) @db.Decimal(12, 2)
+  totalPaid        Decimal             @default(0) @db.Decimal(12, 2)
+  netPayable       Decimal             @default(0) @db.Decimal(12, 2)
+  remainingBalance Decimal             @default(0) @db.Decimal(12, 2)
+  paymentStatus    SalaryPaymentStatus @default(UNPAID)
+  finalized        Boolean             @default(false)
+  finalizedAt      DateTime?
+  dueDate          DateTime?
+  createdByUserId  String
+  createdBy        User                @relation("SalaryRecordCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId String?
+  approvedBy       User?               @relation("SalaryRecordApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt       DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  transactions     SalaryTransaction[]
+
+  @@unique([employeeId, salaryMonth, salaryYear])
+  @@index([salaryMonth, salaryYear])
+  @@index([paymentStatus])
+  @@index([finalized])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+}
+
+model SalaryTransaction {
+  id                     String                     @id @default(uuid())
+  salaryRecordId         String
+  salaryRecord           SalaryRecord               @relation(fields: [salaryRecordId], references: [id])
+  employeeId             String
+  employee               Employee                   @relation(fields: [employeeId], references: [id])
+  transactionType        SalaryTransactionType
+  amount                 Decimal                    @db.Decimal(12, 2)
+  adjustmentDirection    SalaryAdjustmentDirection?
+  transactionDate        DateTime
+  reason                 String?
+  paymentMethod          PaymentMethod?
+  transactionReference   String?
+  notes                  String?
+  isReversed             Boolean                    @default(false)
+  reversedAt             DateTime?
+  reversalReason         String?
+  reversesTransactionId  String?
+  reversesTransaction    SalaryTransaction?         @relation("SalaryTransactionReversal", fields: [reversesTransactionId], references: [id])
+  reversedByTransactions SalaryTransaction[]        @relation("SalaryTransactionReversal")
+  expenseId              String?                    @unique
+  expense                Expense?                   @relation(fields: [expenseId], references: [id])
+  createdByUserId        String
+  createdBy              User                       @relation("SalaryTransactionCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId       String?
+  approvedBy             User?                      @relation("SalaryTransactionApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt             DateTime?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+
+  @@index([salaryRecordId])
+  @@index([employeeId])
+  @@index([transactionType])
+  @@index([transactionDate])
+  @@index([isReversed])
+  @@index([reversesTransactionId])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+}
+
+model ElectricityReading {
+  id                 String    @id @default(uuid())
+  propertyId         String
+  property           Property  @relation(fields: [propertyId], references: [id])
+  unitId             String?
+  unit               Unit?     @relation(fields: [unitId], references: [id])
+  /// Previous meter reading (aka previousReading)
+  previousUnits      Decimal   @db.Decimal(12, 3)
+  /// Current meter reading — null until entered for the month
+  currentUnits       Decimal?  @db.Decimal(12, 3)
+  consumedUnits      Decimal?  @db.Decimal(12, 3)
+  ratePerUnit        Decimal   @db.Decimal(12, 2)
+  /// Base bill before late fine (units * rate)
+  calculatedAmount   Decimal   @default(0) @db.Decimal(12, 2)
+  dueDate            DateTime?
+  lateFinePercentage Decimal   @default(5) @db.Decimal(5, 2)
+  lateFineAmount     Decimal   @default(0) @db.Decimal(12, 2)
+  /// Ensures 5% fine is applied at most once per bill
+  lateFineApplied    Boolean   @default(false)
+  readingDate        DateTime
+  billingMonth       Int
+  billingYear        Int
+  notes              String?
+  expenseId          String?   @unique
+  expense            Expense?  @relation(fields: [expenseId], references: [id])
+  createdByUserId    String
+  createdBy          User      @relation(fields: [createdByUserId], references: [id])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([unitId, billingMonth, billingYear])
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([billingMonth, billingYear])
+  @@index([readingDate])
+  @@index([dueDate])
+  @@index([createdByUserId])
+}
+
+model ElectricityRateHistory {
+  id              String    @id @default(uuid())
+  ratePerUnit     Decimal   @db.Decimal(12, 2)
+  effectiveFrom   DateTime  @default(now())
+  effectiveTo     DateTime?
+  reason          String?
+  changedByUserId String
+  changedBy       User      @relation("ElectricityRateChangedBy", fields: [changedByUserId], references: [id])
+  createdAt       DateTime  @default(now())
+
+  @@index([effectiveFrom])
+  @@index([changedByUserId])
+}
+
+model Payment {
+  id                      String                 @id @default(uuid())
+  paymentNumber           String                 @unique
+  paymentForType          PaymentForType
+  bookingId               String?
+  booking                 Booking?               @relation(fields: [bookingId], references: [id])
+  monthlyTenancyId        String?
+  monthlyTenancy          MonthlyTenancy?        @relation(fields: [monthlyTenancyId], references: [id])
+  monthlyBillId           String?
+  monthlyBill             MonthlyBill?           @relation(fields: [monthlyBillId], references: [id])
+  /// Owner monthly statement ledger link (PaymentForType.OWNER).
+  ownerMonthlyStatementId String?
+  ownerMonthlyStatement   OwnerMonthlyStatement? @relation(fields: [ownerMonthlyStatementId], references: [id])
+  ownerId                 String?
+  owner                   Owner?                 @relation(fields: [ownerId], references: [id])
+  transactionType         PaymentTransactionType
+  amount                  Decimal                @db.Decimal(12, 2)
+  paymentMethod           PaymentMethod
+  bankName                String?
+  accountTitle            String?
+  transactionReference    String?
+  paymentDate             DateTime
+  notes                   String?
+  proofAttachmentUrl      String?
+  status                  PaymentStatus          @default(COMPLETED)
+  originalPaymentId       String?
+  originalPayment         Payment?               @relation("PaymentCorrections", fields: [originalPaymentId], references: [id])
+  corrections             Payment[]              @relation("PaymentCorrections")
+  createdByUserId         String
+  createdBy               User                   @relation("PaymentCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId        String?
+  approvedBy              User?                  @relation("PaymentApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt              DateTime?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  rentCredit RentCredit?
+
+  @@index([paymentForType])
+  @@index([bookingId])
+  @@index([monthlyTenancyId])
+  @@index([monthlyBillId])
+  @@index([ownerMonthlyStatementId])
+  @@index([ownerId])
+  @@index([transactionType])
+  @@index([status])
+  @@index([paymentMethod])
+  @@index([paymentDate])
+  @@index([paymentDate, status])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+  @@index([originalPaymentId])
+}
+
+/// Apartment/room owner profile (financially linked person or partner).
+model Owner {
+  id                  String                  @id @default(uuid())
+  fullName            String
+  fatherOrSpouseName  String?
+  phone               String
+  alternatePhone      String?
+  email               String?
+  cnic                String?                 @unique
+  address             String?
+  city                String?
+  bankName            String?
+  accountTitle        String?
+  accountNumberOrIban String?
+  branchName          String?
+  notes               String?
+  isActive            Boolean                 @default(true)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  unitAssignments     OwnerUnitAssignment[]
+  monthlyStatements   OwnerMonthlyStatement[]
+  payments            Payment[]
+
+  @@index([phone])
+  @@index([isActive])
+  @@index([fullName])
+}
+
+/// Junction / ownership agreement: multi-owner per unit with % and account direction.
+/// Product alias: OwnerUnitAgreement (table kept as OwnerUnitAssignment for FK stability).
+model OwnerUnitAssignment {
+  id                  String                   @id @default(uuid())
+  ownerId             String
+  owner               Owner                    @relation(fields: [ownerId], references: [id])
+  propertyId          String
+  property            Property                 @relation(fields: [propertyId], references: [id])
+  unitId              String
+  unit                Unit                     @relation(fields: [unitId], references: [id])
+  accountDirection    OwnerAccountDirection
+  ownershipPercentage Decimal                  @default(0) @db.Decimal(5, 2)
+  /// Current agreed monthly amount (latest revision applied here for ACTIVE agreements).
+  fixedMonthlyAmount  Decimal                  @default(0) @db.Decimal(12, 2)
+  agreementStart      DateTime
+  agreementEnd        DateTime?
+  dueDay              Int                      @default(15)
+  status              OwnerAssignmentStatus    @default(ACTIVE)
+  notes               String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  endedAt             DateTime?
+  monthlyStatements   OwnerMonthlyStatement[]
+  revisions           OwnerAgreementRevision[]
+
+  @@index([ownerId])
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([accountDirection])
+  @@index([status])
+  @@index([agreementStart])
+  @@index([ownerId, status])
+  @@index([unitId, status])
+}
+
+/// Historical amount/percentage revisions. Old monthly statements keep their expectedAmount.
+model OwnerAgreementRevision {
+  id                          String              @id @default(uuid())
+  ownerUnitAssignmentId       String
+  ownerUnitAssignment         OwnerUnitAssignment @relation(fields: [ownerUnitAssignmentId], references: [id])
+  previousFixedMonthlyAmount  Decimal             @db.Decimal(12, 2)
+  newFixedMonthlyAmount       Decimal             @db.Decimal(12, 2)
+  previousOwnershipPercentage Decimal?            @db.Decimal(5, 2)
+  newOwnershipPercentage      Decimal?            @db.Decimal(5, 2)
+  effectiveFrom               DateTime
+  reason                      String
+  createdByUserId             String
+  createdBy                   User                @relation("OwnerAgreementRevisionCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt                   DateTime            @default(now())
+
+  @@index([ownerUnitAssignmentId])
+  @@index([effectiveFrom])
+  @@index([createdByUserId])
+  @@index([createdAt])
+}
+
+/// Per-assignment monthly statement. Totals recalculated from Payment ledger.
+model OwnerMonthlyStatement {
+  id                       String                      @id @default(uuid())
+  ownerUnitAssignmentId    String
+  ownerUnitAssignment      OwnerUnitAssignment         @relation(fields: [ownerUnitAssignmentId], references: [id])
+  ownerId                  String
+  owner                    Owner                       @relation(fields: [ownerId], references: [id])
+  propertyId               String
+  property                 Property                    @relation(fields: [propertyId], references: [id])
+  unitId                   String
+  unit                     Unit                        @relation(fields: [unitId], references: [id])
+  statementMonth           Int
+  statementYear            Int
+  accountDirection         OwnerAccountDirection
+  expectedAmount           Decimal                     @db.Decimal(12, 2)
+  previousBalance          Decimal                     @default(0) @db.Decimal(12, 2)
+  adjustmentAmount         Decimal                     @default(0) @db.Decimal(12, 2)
+  totalPayableOrReceivable Decimal                     @db.Decimal(12, 2)
+  totalPaid                Decimal                     @default(0) @db.Decimal(12, 2)
+  remainingAmount          Decimal                     @db.Decimal(12, 2)
+  dueDate                  DateTime
+  paymentStatus            OwnerStatementPaymentStatus @default(UNPAID)
+  finalized                Boolean                     @default(false)
+  notes                    String?
+  createdAt                DateTime                    @default(now())
+  updatedAt                DateTime                    @updatedAt
+  payments                 Payment[]
+
+  @@unique([ownerUnitAssignmentId, statementMonth, statementYear])
+  @@index([ownerId])
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([statementMonth, statementYear])
+  @@index([accountDirection])
+  @@index([paymentStatus])
+  @@index([dueDate])
+  @@index([finalized])
+}
+
+model InventoryCategory {
+  id          String          @id @default(uuid())
+  name        String          @unique
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  items       InventoryItem[]
+
+  @@index([isActive])
+}
+
+model InventoryItem {
+  id              String              @id @default(uuid())
+  itemCode        String              @unique
+  categoryId      String
+  category        InventoryCategory   @relation(fields: [categoryId], references: [id])
+  name            String
+  description     String?
+  unitOfMeasure   String
+  currentQuantity Decimal             @default(0) @db.Decimal(12, 3)
+  averageUnitCost Decimal             @default(0) @db.Decimal(12, 2)
+  reorderLevel    Decimal             @default(0) @db.Decimal(12, 3)
+  supplierName    String?
+  isConsumable    Boolean             @default(true)
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  movements       InventoryMovement[]
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([isConsumable])
+  @@index([isActive])
+}
+
+model InventoryMovement {
+  id                    String                @id @default(uuid())
+  movementNumber        String                @unique
+  itemId                String
+  item                  InventoryItem         @relation(fields: [itemId], references: [id])
+  movementType          InventoryMovementType
+  quantity              Decimal               @db.Decimal(12, 3)
+  unitCost              Decimal               @default(0) @db.Decimal(12, 2)
+  totalCost             Decimal               @default(0) @db.Decimal(12, 2)
+  movementDate          DateTime
+  sourcePropertyId      String?
+  sourceProperty        Property?             @relation("MovementSourceProperty", fields: [sourcePropertyId], references: [id])
+  sourceUnitId          String?
+  sourceUnit            Unit?                 @relation("MovementSourceUnit", fields: [sourceUnitId], references: [id])
+  destinationPropertyId String?
+  destinationProperty   Property?             @relation("MovementDestinationProperty", fields: [destinationPropertyId], references: [id])
+  destinationUnitId     String?
+  destinationUnit       Unit?                 @relation("MovementDestinationUnit", fields: [destinationUnitId], references: [id])
+  bookingId             String?
+  booking               Booking?              @relation(fields: [bookingId], references: [id])
+  monthlyTenancyId      String?
+  monthlyTenancy        MonthlyTenancy?       @relation(fields: [monthlyTenancyId], references: [id])
+  employeeId            String?
+  employee              Employee?             @relation(fields: [employeeId], references: [id])
+  expenseId             String?
+  expense               Expense?              @relation(fields: [expenseId], references: [id])
+  referenceNumber       String?
+  reason                String?
+  notes                 String?
+  createdByUserId       String
+  createdBy             User                  @relation("InventoryMovementCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUserId      String?
+  approvedBy            User?                 @relation("InventoryMovementApprovedBy", fields: [approvedByUserId], references: [id])
+  approvedAt            DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([itemId])
+  @@index([movementType])
+  @@index([movementDate])
+  @@index([sourcePropertyId])
+  @@index([sourceUnitId])
+  @@index([destinationPropertyId])
+  @@index([destinationUnitId])
+  @@index([bookingId])
+  @@index([monthlyTenancyId])
+  @@index([employeeId])
+  @@index([expenseId])
+  @@index([createdByUserId])
+  @@index([approvedByUserId])
+}
+
+model RoomAsset {
+  id           String             @id @default(uuid())
+  assetCode    String             @unique
+  propertyId   String
+  property     Property           @relation(fields: [propertyId], references: [id])
+  unitId       String
+  unit         Unit               @relation(fields: [unitId], references: [id])
+  itemName     String
+  category     String?
+  quantity     Decimal            @default(1) @db.Decimal(12, 3)
+  purchaseCost Decimal            @default(0) @db.Decimal(12, 2)
+  assignedDate DateTime
+  condition    RoomAssetCondition @default(GOOD)
+  serialNumber String?
+  brand        String?
+  model        String?
+  notes        String?
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  history      RoomAssetHistory[]
+
+  @@index([propertyId])
+  @@index([unitId])
+  @@index([condition])
+  @@index([isActive])
+  @@index([itemName])
+  @@index([serialNumber])
+}
+
+model RoomAssetHistory {
+  id                String              @id @default(uuid())
+  roomAssetId       String
+  roomAsset         RoomAsset           @relation(fields: [roomAssetId], references: [id])
+  previousCondition RoomAssetCondition?
+  newCondition      RoomAssetCondition
+  quantityAffected  Decimal             @default(1) @db.Decimal(12, 3)
+  actionDate        DateTime
+  repairCost        Decimal             @default(0) @db.Decimal(12, 2)
+  replacementCost   Decimal             @default(0) @db.Decimal(12, 2)
+  reason            String?
+  notes             String?
+  expenseId         String?
+  expense           Expense?            @relation(fields: [expenseId], references: [id])
+  createdByUserId   String
+  createdBy         User                @relation(fields: [createdByUserId], references: [id])
+  createdAt         DateTime            @default(now())
+
+  @@index([roomAssetId])
+  @@index([newCondition])
+  @@index([actionDate])
+  @@index([expenseId])
+  @@index([createdByUserId])
+}

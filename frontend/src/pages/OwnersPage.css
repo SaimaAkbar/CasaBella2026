@@ -1,0 +1,287 @@
+.owners-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.owners-page__tab {
+  border: 1px solid #e6dfcf;
+  background: #fff;
+  color: #2a2a2a;
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.owners-page__tab--active {
+  border-color: #c9a227;
+  background: #faf6ea;
+  color: #1f1a0f;
+  font-weight: 600;
+}
+
+.owners-page__subtitle {
+  margin: 0 0 0.75rem;
+  color: #6b6558;
+  font-size: 0.95rem;
+}
+
+.owners-page__period-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.85rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.85rem;
+  background: #fffdf8;
+  border: 1px solid #ece6d8;
+  border-radius: 10px;
+}
+
+.owners-page__period-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: #6b6558;
+}
+
+.owners-page__period-bar select,
+.owners-page__period-bar input {
+  min-width: 7rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #e0d8c8;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.9rem;
+  color: #1f1a0f;
+}
+
+.owners-page__period-search {
+  flex: 1 1 180px;
+}
+
+.owners-page__period-search input {
+  min-width: 100%;
+}
+
+.owners-page__period-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.owners-page__muted {
+  color: #6b6558;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.owners-page__table-wrap {
+  overflow: auto;
+  border: 1px solid #ece6d8;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.owners-page__main-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.owners-page__main-table th,
+.owners-page__main-table td {
+  text-align: left;
+  padding: 0.65rem 0.7rem;
+  border-bottom: 1px solid #f0ebe0;
+  vertical-align: top;
+}
+
+.owners-page__main-table th {
+  background: #faf6ea;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #6b6558;
+  white-space: nowrap;
+}
+
+.owners-page__unit-row {
+  background: #fbf9f3;
+}
+
+.owners-page__unit-cell {
+  padding-left: 1.25rem;
+  font-size: 0.88rem;
+}
+
+.owners-page__units-toggle {
+  font-weight: 600;
+}
+
+.owners-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0.85rem 0 1rem;
+  align-items: center;
+}
+
+.owners-page__group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.owners-page__direction-toggle {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.owners-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.owners-page__summary--pastel .summary-card {
+  border: 1px solid #ece6d8;
+  box-shadow: none;
+  background: #fff;
+}
+
+.owners-page__summary--pastel .summary-card--info {
+  background: #eef6fb;
+}
+
+.owners-page__summary--pastel .summary-card--success {
+  background: #eef8f1;
+}
+
+.owners-page__summary--pastel .summary-card--gold {
+  background: #faf6ea;
+}
+
+.owners-page__summary--pastel .summary-card--danger {
+  background: #fbf0ef;
+}
+
+.owners-page__summary--pastel .summary-card--warn {
+  background: #fbf5e8;
+}
+
+.owners-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.owners-page__groups {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.owners-page__group-card {
+  background: #fff;
+  border: 1px solid #ece6d8;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.owners-page__group-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f1a0f;
+}
+
+.owners-page__group-card header p {
+  margin: 0.25rem 0 0.7rem;
+  color: #6b6558;
+  font-size: 0.85rem;
+}
+
+.owners-page__group-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.owners-page__group-card li {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-top: 1px solid #f0ebe0;
+  font-size: 0.9rem;
+}
+
+.owners-page__drawer {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 8, 0.35);
+  /* Below ConfirmDialog / FormModal (z-index 80) so Mark Paid confirm stays visible */
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.owners-page__drawer-panel {
+  width: min(720px, 100%);
+  background: #fff;
+  height: 100%;
+  overflow: auto;
+  padding: 1.1rem 1.25rem;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+}
+
+.owners-page__drawer-panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.owners-page__drawer-panel h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.owners-page__drawer-panel header p {
+  margin: 0.3rem 0 0;
+  color: #6b6558;
+}
+
+.owners-page__detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.owners-page__detail-table th,
+.owners-page__detail-table td {
+  border-bottom: 1px solid #ece6d8;
+  text-align: left;
+  padding: 0.55rem 0.4rem;
+  vertical-align: top;
+}
+
+@media (max-width: 800px) {
+  .owners-page__group-card li {
+    grid-template-columns: 1fr;
+  }
+
+  .owners-page__direction-toggle {
+    margin-left: 0;
+  }
+}

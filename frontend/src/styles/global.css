@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Shell */
+  --header-bg: #0b1117;
+  --sidebar-bg: #fcfcfa;
+  --page-bg: #f7f8fa;
+  --card-bg: #ffffff;
+
+  /* Brand */
+  --gold: #d8b84e;
+  --gold-soft: #f4e3a2;
+  --gold-bright: #e8c96a;
+  --gold-deep: #b8962f;
+
+  /* Text */
+  --text: #171a1f;
+  --text-muted: #6b7280;
+  --text-on-dark: #f5f0e6;
+  --text-muted-on-dark: #b7b0a3;
+
+  /* Surfaces */
+  --border: #e6e8ec;
+  --border-soft: #eef0f3;
+  --shadow: 0 8px 24px rgba(23, 26, 31, 0.06);
+  --shadow-soft: 0 2px 8px rgba(23, 26, 31, 0.04);
+
+  /* Status */
+  --status-available: #22c55e;
+  --status-occupied: #3b82f6;
+  --status-occupied-daily: #9333ea;
+  --status-cleaning: #ef4444;
+  --status-monthly-vacant: #f8fafc;
+  --status-maintenance: #f59e0b;
+  --status-blocked: #6b7280;
+
+  /* Pastel KPI */
+  --kpi-blue: #e8f1ff;
+  --kpi-green: #e8f8ef;
+  --kpi-lavender: #efeafc;
+  --kpi-mint: #e6f7f2;
+  --kpi-amber: #fff4e5;
+  --kpi-pink: #ffe8ec;
+
+  --danger: #e35d5d;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+
+  --sidebar-width: 200px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 88px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-boot {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.app-boot__spinner {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+  border: 3px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-boot {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--page-bg);
+}
+
+.app-boot__spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto;
+  border: 2px solid rgba(216, 184, 78, 0.25);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
