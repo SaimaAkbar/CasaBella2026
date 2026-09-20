@@ -24,7 +24,10 @@ export const siteConfig = {
       'Northern Strip, FECHS E-11/2, E-11',
       'Islamabad 44000, Pakistan',
     ],
-    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '923456789147',
+    whatsapp:
+      process.env.NEXT_PUBLIC_BOOKING_WHATSAPP_NUMBER ||
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
+      '923456789147',
   },
   location: {
     latitude: null as number | null,

@@ -1629,3 +1629,19 @@ model RoomAssetHistory {
   @@index([expenseId])
   @@index([createdByUserId])
 }
+
+/// Hotel facilities shown on the public website (/facilities).
+model WebsiteFacility {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String
+  imageAlt    String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([sortOrder])
+}

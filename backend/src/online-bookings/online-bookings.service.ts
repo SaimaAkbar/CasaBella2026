@@ -129,15 +129,19 @@ export class OnlineBookingsService {
       checkOutDateTime,
     );
 
-    const bookedUnitIds = await this.findBookedUnitIds(
-      units.map((u) => u.id),
-      range.checkIn,
-      range.checkOut,
-    );
+    const bookedUnitIds =
+      range != null
+        ? await this.findBookedUnitIds(
+            units.map((u) => u.id),
+            range.checkIn,
+            range.checkOut,
+          )
+        : null;
 
     return units.map((unit) =>
       this.mapPublicUnit(unit, {
-        booked: bookedUnitIds.has(unit.id),
+        booked: bookedUnitIds ? bookedUnitIds.has(unit.id) : null,
+        datesChecked: range != null,
       }),
     );
   }
@@ -165,30 +169,34 @@ export class OnlineBookingsService {
       checkInDateTime,
       checkOutDateTime,
     );
-    const bookedUnitIds = await this.findBookedUnitIds(
-      [unit.id],
-      range.checkIn,
-      range.checkOut,
-    );
+    const bookedUnitIds =
+      range != null
+        ? await this.findBookedUnitIds([unit.id], range.checkIn, range.checkOut)
+        : null;
 
-    return this.mapPublicUnit(unit, { booked: bookedUnitIds.has(unit.id) });
+    return this.mapPublicUnit(unit, {
+      booked: bookedUnitIds ? bookedUnitIds.has(unit.id) : null,
+      datesChecked: range != null,
+    });
   }
 
+  /**
+   * Date-range availability only.
+   * When check-in/out are omitted, do NOT probe "tonight" — that incorrectly
+   * marks currently occupied rooms as permanently unbookable on the catalogue.
+   */
   private resolveAvailabilityRange(
     checkInDateTime?: string,
     checkOutDateTime?: string,
-  ) {
-    if (checkInDateTime && checkOutDateTime) {
-      const checkIn = new Date(checkInDateTime);
-      const checkOut = new Date(checkOutDateTime);
-      if (!(checkIn < checkOut)) {
-        throw new BadRequestException('Check-out must be after check-in');
-      }
-      return { checkIn, checkOut };
+  ): { checkIn: Date; checkOut: Date } | null {
+    if (!checkInDateTime || !checkOutDateTime) {
+      return null;
     }
-    // No dates selected: use "now → +1 day" to reflect current occupancy only.
-    const checkIn = new Date();
-    const checkOut = new Date(checkIn.getTime() + 24 * 60 * 60 * 1000);
+    const checkIn = new Date(checkInDateTime);
+    const checkOut = new Date(checkOutDateTime);
+    if (!(checkIn < checkOut)) {
+      throw new BadRequestException('Check-out must be after check-in');
+    }
     return { checkIn, checkOut };
   }
 
@@ -230,8 +238,14 @@ export class OnlineBookingsService {
       return { available: true as const };
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Unit is not available';
-      return { available: false as const, message };
+        error instanceof Error
+          ? error.message
+          : 'NOT AVAILABLE FOR SELECTED DATES';
+      return {
+        available: false as const,
+        reason: 'ROOM_BOOKED' as const,
+        message,
+      };
     }
   }
 
@@ -1537,7 +1551,7 @@ export class OnlineBookingsService {
         property: { select: { id: true; name: true; isActive: true } };
       };
     }>,
-    options: { booked: boolean },
+    options: { booked: boolean | null; datesChecked: boolean },
   ) {
     const operationalBlock =
       unit.status === UnitStatus.MAINTENANCE ||
@@ -1547,7 +1561,7 @@ export class OnlineBookingsService {
       'AVAILABLE';
     if (operationalBlock) {
       bookingAvailability = 'UNAVAILABLE';
-    } else if (options.booked) {
+    } else if (options.datesChecked && options.booked === true) {
       bookingAvailability = 'BOOKED';
     }
 
@@ -1562,6 +1576,20 @@ export class OnlineBookingsService {
     const imageUrls = Array.isArray(unit.imageUrls)
       ? unit.imageUrls.filter((v): v is string => typeof v === 'string')
       : [];
+
+    const datesChecked = options.datesChecked && !operationalBlock;
+    const canBook =
+      bookingAvailability === 'AVAILABLE' &&
+      (!datesChecked || options.booked === false);
+
+    let bookingLabel = 'SELECT DATES';
+    if (operationalBlock) {
+      bookingLabel = 'UNAVAILABLE';
+    } else if (datesChecked && options.booked) {
+      bookingLabel = 'ALREADY BOOKED';
+    } else if (datesChecked) {
+      bookingLabel = 'BOOK NOW';
+    }
 
     return {
       id: unit.id,
@@ -1580,14 +1608,10 @@ export class OnlineBookingsService {
       floor: unit.floor,
       dailyRate: unit.dailyRate != null ? serializeMoney(unit.dailyRate) : null,
       status: unit.status,
+      datesChecked,
       bookingAvailability,
-      canBook: bookingAvailability === 'AVAILABLE',
-      bookingLabel:
-        bookingAvailability === 'AVAILABLE'
-          ? 'BOOK NOW'
-          : bookingAvailability === 'BOOKED'
-            ? 'ALREADY BOOKED'
-            : 'UNAVAILABLE',
+      canBook,
+      bookingLabel,
     };
   }
 
@@ -1927,7 +1951,7 @@ export class OnlineBookingsService {
 
     if (overlap) {
       throw new ConflictException(
-        'Unit is already booked or occupied for the selected date and time.',
+        'Unfortunately, this room is no longer available for your selected dates. Please select different dates.',
       );
     }
   }

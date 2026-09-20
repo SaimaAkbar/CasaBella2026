@@ -13,13 +13,30 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  searchParams: Promise<{ checkIn?: string; checkOut?: string }>;
+  searchParams: Promise<{
+    checkIn?: string;
+    checkOut?: string;
+    availableOnly?: string;
+  }>;
 };
+
+function isRoomAvailableForDates(room: Room, hasDates: boolean) {
+  if (!hasDates) return true;
+  if (room.bookingAvailability === 'UNAVAILABLE') return false;
+  return room.bookingAvailability === 'AVAILABLE' && room.canBook !== false;
+}
 
 export default async function RoomsPage({ searchParams }: Props) {
   const params = await searchParams;
   const checkIn = params.checkIn?.trim() || undefined;
   const checkOut = params.checkOut?.trim() || undefined;
+  const hasDates = Boolean(checkIn && checkOut);
+  const dates = hasDates ? { checkIn: checkIn!, checkOut: checkOut! } : undefined;
+  // When dates are set, default to showing only available rooms.
+  const availableOnly =
+    !hasDates
+      ? false
+      : params.availableOnly !== '0' && params.availableOnly !== 'false';
 
   let rooms: Room[] = [];
   let allUnitCount = 0;
@@ -30,9 +47,9 @@ export default async function RoomsPage({ searchParams }: Props) {
       import('@/lib/api/units'),
     ]);
     const [roomList, allUnits, apartments] = await Promise.all([
-      fetchRooms({ checkIn, checkOut }),
-      fetchPublicUnits(undefined, { checkIn, checkOut }),
-      fetchPublicUnits('APARTMENT', { checkIn, checkOut }),
+      fetchRooms(dates),
+      fetchPublicUnits(undefined, dates),
+      fetchPublicUnits('APARTMENT', dates),
     ]);
     rooms = roomList;
     allUnitCount = allUnits.length;
@@ -41,17 +58,38 @@ export default async function RoomsPage({ searchParams }: Props) {
     error = err instanceof Error ? err.message : 'Unable to load rooms from POS.';
   }
 
+  const availableCount = rooms.filter((room) =>
+    isRoomAvailableForDates(room, hasDates),
+  ).length;
+
+  const sorted = [...rooms].sort((a, b) => {
+    const aOk = isRoomAvailableForDates(a, hasDates) ? 0 : 1;
+    const bOk = isRoomAvailableForDates(b, hasDates) ? 0 : 1;
+    return aOk - bOk;
+  });
+
+  const visible = availableOnly
+    ? sorted.filter((room) => isRoomAvailableForDates(room, hasDates))
+    : sorted;
+
   return (
     <>
       <PageHero
         title="Hotel Rooms"
-        subtitle="All rooms from Casa Bella POS inventory. Availability updates with your dates."
+        subtitle="Filter by check-in and check-out to see rooms free for your stay."
         imageSrc="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1800&q=80"
         imageAlt="Casa Bella hotel room"
       />
       <section className="section">
         <div className="container">
-          <RoomsDateFilter checkIn={checkIn} checkOut={checkOut} basePath="/rooms" />
+          <RoomsDateFilter
+            checkIn={checkIn}
+            checkOut={checkOut}
+            availableOnly={hasDates ? availableOnly : true}
+            basePath="/rooms"
+            availableCount={hasDates ? availableCount : undefined}
+            totalCount={hasDates ? rooms.length : undefined}
+          />
           {error ? (
             <div className="alert alert--error">
               <strong>Could not load rooms from POS API.</strong>
@@ -93,9 +131,19 @@ export default async function RoomsPage({ searchParams }: Props) {
               )}
             </div>
           ) : null}
-          {rooms.length > 0 ? (
+          {!error && rooms.length > 0 && visible.length === 0 ? (
+            <div className="empty-state">
+              <h2>No rooms available for these dates</h2>
+              <p>
+                All {rooms.length} rooms are booked for {checkIn} → {checkOut}.
+                Try different dates, or uncheck “Show only available rooms” to see
+                booked rooms.
+              </p>
+            </div>
+          ) : null}
+          {visible.length > 0 ? (
             <div className="grid-cards">
-              {rooms.map((room) => (
+              {visible.map((room) => (
                 <RoomCard
                   key={room.id}
                   room={room}

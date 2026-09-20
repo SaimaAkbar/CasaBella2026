@@ -12,6 +12,7 @@ import {
 import { apiFetch, isMockMode } from '@/lib/api/client';
 import { formatMoney } from '@/lib/booking';
 import { StayDateCalendar } from '@/components/booking/StayDateCalendar';
+import { BookingChoicePanel } from '@/components/booking/WhatsAppBookingCta';
 import type { BookingQuote, GuestDetails, OnlinePaymentSelection, PublicUnit, StaySelection } from '@/types';
 
 const emptyGuest: GuestDetails = {
@@ -227,6 +228,18 @@ export function BookingWizard() {
       }))
     : catalog.map((item) => ({ id: item.id, label: item.name }));
 
+  const whatsappDetails = {
+    roomId: stay.propertyId || undefined,
+    roomName: stay.propertyName || undefined,
+    propertyType: stay.propertyType,
+    checkIn: stay.checkIn || undefined,
+    checkOut: stay.checkOut || undefined,
+    adults: stay.adults,
+    children: stay.children,
+    totalAmount: quote?.available ? quote.total : null,
+    currency: quote?.currency || 'PKR',
+  };
+
   return (
     <div className="booking-wizard">
       <ol className="booking-steps" aria-label="Booking steps">
@@ -324,11 +337,15 @@ export function BookingWizard() {
               />
             </label>
           </div>
-          <div className="booking-panel__actions">
-            <button type="submit" className="btn btn--primary" disabled={busy}>
-              {busy ? 'Checking…' : 'CHECK AVAILABILITY'}
-            </button>
-          </div>
+          <BookingChoicePanel
+            onlineLabel="Book Online"
+            details={whatsappDetails}
+            onlineAction={
+              <button type="submit" className="btn btn--primary" disabled={busy}>
+                {busy ? 'Checking…' : 'Book Online'}
+              </button>
+            }
+          />
         </form>
       ) : null}
 
@@ -563,23 +580,29 @@ export function BookingWizard() {
             <button type="button" className="btn btn--ghost-dark" onClick={() => setStep(2)}>
               Back
             </button>
-            <button
-              type="button"
-              className="btn btn--gold"
-              disabled={
-                busy ||
-                !quote.available ||
-                Boolean(paymentConfig && !paymentConfig.canStartCheckout)
-              }
-              onClick={() => void onConfirm()}
-            >
-              {busy
-                ? 'Preparing secure checkout…'
-                : paymentConfig && !paymentConfig.canStartCheckout
-                  ? 'PAYMENT GATEWAY NOT CONFIGURED'
-                  : 'PROCEED TO SECURE PAYMENT'}
-            </button>
           </div>
+          <BookingChoicePanel
+            onlineLabel="Book Online"
+            details={whatsappDetails}
+            onlineAction={
+              <button
+                type="button"
+                className="btn btn--gold"
+                disabled={
+                  busy ||
+                  !quote.available ||
+                  Boolean(paymentConfig && !paymentConfig.canStartCheckout)
+                }
+                onClick={() => void onConfirm()}
+              >
+                {busy
+                  ? 'Preparing secure checkout…'
+                  : paymentConfig && !paymentConfig.canStartCheckout
+                    ? 'PAYMENT GATEWAY NOT CONFIGURED'
+                    : 'Book Online — Secure Payment'}
+              </button>
+            }
+          />
         </div>
       ) : null}
     </div>

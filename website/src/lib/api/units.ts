@@ -43,16 +43,22 @@ function unitAmenities(unit: PublicUnit) {
 }
 
 function availabilityFields(unit: PublicUnit) {
+  const datesChecked = unit.datesChecked === true;
   const bookingAvailability = unit.bookingAvailability ?? 'AVAILABLE';
-  const canBook = unit.canBook ?? bookingAvailability === 'AVAILABLE';
+  const canBook =
+    unit.canBook ??
+    (bookingAvailability === 'AVAILABLE' &&
+      (!datesChecked || bookingAvailability === 'AVAILABLE'));
   const bookingLabel =
     unit.bookingLabel ??
-    (canBook
-      ? 'BOOK NOW'
+    (!datesChecked
+      ? 'SELECT DATES'
       : bookingAvailability === 'BOOKED'
         ? 'ALREADY BOOKED'
-        : 'UNAVAILABLE');
-  return { bookingAvailability, canBook, bookingLabel };
+        : bookingAvailability === 'UNAVAILABLE'
+          ? 'UNAVAILABLE'
+          : 'BOOK NOW');
+  return { bookingAvailability, canBook, bookingLabel, datesChecked };
 }
 
 export function mapUnitToRoom(unit: PublicUnit): Room {
@@ -126,8 +132,9 @@ export async function fetchPublicUnits(
 ): Promise<PublicUnit[]> {
   const params = new URLSearchParams();
   if (unitType) params.set('unitType', unitType);
-  if (dates?.checkIn) params.set('checkInDateTime', `${dates.checkIn}T14:00:00.000Z`);
-  if (dates?.checkOut) {
+  // Only evaluate availability when both ends of the stay are known.
+  if (dates?.checkIn && dates?.checkOut) {
+    params.set('checkInDateTime', `${dates.checkIn}T14:00:00.000Z`);
     params.set('checkOutDateTime', `${dates.checkOut}T12:00:00.000Z`);
   }
   const q = params.toString() ? `?${params.toString()}` : '';
@@ -140,10 +147,8 @@ export async function fetchPublicUnit(
 ): Promise<PublicUnit | null> {
   try {
     const params = new URLSearchParams();
-    if (dates?.checkIn) {
+    if (dates?.checkIn && dates?.checkOut) {
       params.set('checkInDateTime', `${dates.checkIn}T14:00:00.000Z`);
-    }
-    if (dates?.checkOut) {
       params.set('checkOutDateTime', `${dates.checkOut}T12:00:00.000Z`);
     }
     const q = params.toString() ? `?${params.toString()}` : '';

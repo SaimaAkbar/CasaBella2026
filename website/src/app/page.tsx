@@ -5,9 +5,9 @@ import { FacilityCard } from '@/components/facilities/FacilityCard';
 import { OfferCard } from '@/components/offers/OfferCard';
 import { ResidenceCard } from '@/components/residences/ResidenceCard';
 import { RoomCard } from '@/components/rooms/RoomCard';
-import { facilities } from '@/data/facilities';
 import { galleryItems } from '@/data/gallery';
 import { offers } from '@/data/offers';
+import { fetchFacilities } from '@/lib/api/facilities';
 import { fetchResidences } from '@/lib/api/residences';
 import { fetchRooms } from '@/lib/api/rooms';
 import { siteConfig } from '@/data/site';
@@ -21,9 +21,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [rooms, residences] = await Promise.all([
+  const [rooms, residences, facilities] = await Promise.all([
     fetchRooms().catch(() => []),
     fetchResidences().catch(() => []),
+    fetchFacilities().catch(() => []),
   ]);
   const featuredRooms = rooms.slice(0, 3);
   const featuredResidences = residences.slice(0, 3);
@@ -124,16 +125,24 @@ export default async function HomePage() {
         <div className="container">
           <p className="eyebrow">Facilities</p>
           <h2>Hotel facilities</h2>
-          <div className="grid-cards" style={{ marginTop: '1.5rem' }}>
-            {facilities.slice(0, 3).map((facility) => (
-              <FacilityCard key={facility.id} facility={facility} />
-            ))}
-          </div>
-          <div style={{ marginTop: '1.5rem' }}>
-            <Link href="/facilities" className="btn btn--ghost-dark">
-              All facilities
-            </Link>
-          </div>
+          {facilities.length === 0 ? (
+            <p style={{ marginTop: '1.5rem' }}>
+              Facilities will be listed soon.
+            </p>
+          ) : (
+            <>
+              <div className="grid-cards" style={{ marginTop: '1.5rem' }}>
+                {facilities.slice(0, 3).map((facility) => (
+                  <FacilityCard key={facility.id} facility={facility} />
+                ))}
+              </div>
+              <div style={{ marginTop: '1.5rem' }}>
+                <Link href="/facilities" className="btn btn--ghost-dark">
+                  All facilities
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

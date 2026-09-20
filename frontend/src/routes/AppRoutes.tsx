@@ -23,6 +23,7 @@ import { PropertiesPage } from '../pages/PropertiesPage';
 import { ReportsPage } from '../pages/ReportsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { UnitsPage } from '../pages/UnitsPage';
+import { WebsiteFacilitiesPage } from '../pages/WebsiteFacilitiesPage';
 
 function GuestRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -58,12 +59,18 @@ export function AppRoutes() {
           <Route path="/monthly-tenants" element={<MonthlyTenantsPage />} />
           <Route path="/daily-guests" element={<DailyGuestsPage />} />
           <Route path="/online-bookings" element={<OnlineBookingsPage />} />
+          <Route
+            element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']} />}
+          >
+            <Route
+              path="/website-facilities"
+              element={<WebsiteFacilitiesPage />}
+            />
+            <Route path="/payments" element={<PaymentsPage />} />
+          </Route>
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/profit-loss" element={<ProfitLossPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']} />}>
-            <Route path="/payments" element={<PaymentsPage />} />
-          </Route>
           <Route element={<RoleRoute roles={['SUPER_ADMIN']} />}>
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />

@@ -27,6 +27,12 @@ function canSeeNavItem(
       (user.role === 'ADMIN' && Boolean(user.canAccessProfitLoss))
     );
   }
+  if (
+    item.path === '/payments' ||
+    item.path === '/website-facilities'
+  ) {
+    return user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
+  }
   if ((SUPER_ADMIN_ONLY_PATHS as readonly string[]).includes(item.path)) {
     return user.role === 'SUPER_ADMIN';
   }

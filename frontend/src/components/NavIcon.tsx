@@ -5,6 +5,7 @@ export type NavIconName =
   | 'tenants'
   | 'guests'
   | 'online'
+  | 'facilities'
   | 'payments'
   | 'expenses'
   | 'owners'
@@ -32,6 +33,8 @@ const PATHS: Record<NavIconName, string> = {
     'M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM8 13a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 8 13zm8 2c-2.5 0-7 1.25-7 3.75V21h14v-2.25C23 16.25 18.5 15 16 15zM8 15c-2.67 0-8 1.34-8 4v2h7v-2c0-1.1.5-2.1 1.3-2.9C8.1 15.05 8.05 15 8 15z',
   online:
     'M12 3a9 9 0 1 0 9 9h-3a6 6 0 1 1-6-6V3zm1 0v8h8a9 9 0 0 0-8-8z',
+  facilities:
+    'M12 3l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V7l8-4zm0 5v8m-4-4h8',
   payments:
     'M3 6h18v12H3V6zm2 4h14M7 16h4',
   expenses:
@@ -93,6 +96,7 @@ export function navIconForPath(path: string): NavIconName {
     '/monthly-tenants': 'tenants',
     '/daily-guests': 'guests',
     '/online-bookings': 'online',
+    '/website-facilities': 'facilities',
     '/payments': 'payments',
     '/expenses': 'expenses',
     '/owners': 'owners',

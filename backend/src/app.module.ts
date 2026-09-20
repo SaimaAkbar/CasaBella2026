@@ -42,6 +42,7 @@ import { SystemModule } from './system/system.module';
 import { TenantUnitHotelUseModule } from './tenant-unit-hotel-use/tenant-unit-hotel-use.module';
 import { UnitsModule } from './units/units.module';
 import { UsersModule } from './users/users.module';
+import { WebsiteFacilitiesModule } from './website-facilities/website-facilities.module';
 import { StaffApprovalGateInterceptor } from './approvals/staff-approval-gate.interceptor';
 
 @Module({
@@ -64,6 +65,7 @@ import { StaffApprovalGateInterceptor } from './approvals/staff-approval-gate.in
     NotificationsModule,
     PropertiesModule,
     UnitsModule,
+    WebsiteFacilitiesModule,
     AvailabilityModule,
     ProfitLossModule,
     ReportsModule,

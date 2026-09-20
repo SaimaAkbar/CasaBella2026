@@ -28,6 +28,7 @@ const IMMEDIATE_POST_EXACT = new Set([
   '/bookings',
   '/guests',
   '/units/upload-image',
+  '/website-facilities/upload-image',
 ]);
 
 const IMMEDIATE_POST_SUFFIXES = [
@@ -77,6 +78,7 @@ const PREFIX_MODULES: Array<{ prefix: string; module: ApprovalModuleName }> = [
   { prefix: '/room-assets', module: ApprovalModuleName.INVENTORY },
   { prefix: '/settings', module: ApprovalModuleName.SETTINGS },
   { prefix: '/users', module: ApprovalModuleName.SETTINGS },
+  { prefix: '/website-facilities', module: ApprovalModuleName.SETTINGS },
 ];
 
 export function normalizeRoute(path: string): string {

@@ -35,6 +35,8 @@ export type PublicUnit = {
   bookingAvailability?: 'AVAILABLE' | 'BOOKED' | 'UNAVAILABLE';
   canBook?: boolean;
   bookingLabel?: string;
+  /** True when the API evaluated a specific check-in/out range. */
+  datesChecked?: boolean;
   availableHint?: boolean;
 };
 
@@ -58,6 +60,7 @@ export type Room = {
   bookingAvailability?: 'AVAILABLE' | 'BOOKED' | 'UNAVAILABLE';
   canBook?: boolean;
   bookingLabel?: string;
+  datesChecked?: boolean;
 };
 
 export type Residence = {
@@ -83,6 +86,7 @@ export type Residence = {
   bookingAvailability?: 'AVAILABLE' | 'BOOKED' | 'UNAVAILABLE';
   canBook?: boolean;
   bookingLabel?: string;
+  datesChecked?: boolean;
 };
 
 export type Offer = {

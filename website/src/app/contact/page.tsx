@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ContactForm } from '@/components/contact/ContactForm';
 import { PageHero } from '@/components/ui/PageHero';
 import { siteConfig } from '@/data/site';
+import { getBookingWhatsAppNumber } from '@/lib/whatsapp';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  const whatsapp = siteConfig.contact.whatsapp;
+  const whatsapp = getBookingWhatsAppNumber();
   const embed = siteConfig.location.mapsEmbedUrl;
 
   return (

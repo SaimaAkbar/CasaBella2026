@@ -182,9 +182,9 @@ export function StayDateCalendar({
       <p className="stay-cal__hint">
         {unitId
           ? picking === 'checkOut' && checkIn
-            ? 'Select check-out date. Red days are already booked.'
-            : 'Select check-in, then check-out. Red days are already booked.'
-          : 'Select a room first to see booked dates in red.'}
+            ? "Select your check-out date. Dates marked 'Booked' are unavailable."
+            : "Select your check-in and check-out dates. Dates marked 'Booked' are unavailable."
+          : 'Select a room first to see booked dates.'}
       </p>
 
       <div className="stay-cal__weekdays">
@@ -200,6 +200,7 @@ export function StayDateCalendar({
           }
           const isBooked = booked.has(cell.key);
           const isPast = cell.key < minDay;
+          const showBookedLabel = isBooked && !isPast;
           const isSelected = isInSelection(cell.key);
           const isStart = cell.key === checkIn;
           const isEnd = checkOut ? cell.key === checkOut : false;
@@ -210,7 +211,7 @@ export function StayDateCalendar({
               disabled={isBooked || isPast || !unitId}
               className={[
                 'stay-cal__cell',
-                isBooked ? 'is-booked' : '',
+                showBookedLabel ? 'is-booked' : '',
                 isPast ? 'is-past' : '',
                 isSelected ? 'is-selected' : '',
                 isStart ? 'is-start' : '',
@@ -219,9 +220,19 @@ export function StayDateCalendar({
                 .filter(Boolean)
                 .join(' ')}
               onClick={() => onDayClick(cell.key)}
-              title={isBooked ? 'Booked' : cell.key}
+              title={showBookedLabel ? 'Booked' : cell.key}
+              aria-label={
+                showBookedLabel
+                  ? `${cell.key}, booked`
+                  : isPast
+                    ? `${cell.key}, unavailable`
+                    : cell.key
+              }
             >
-              {cell.day}
+              <span className="stay-cal__day">{cell.day}</span>
+              {showBookedLabel ? (
+                <span className="stay-cal__booked-label">Booked</span>
+              ) : null}
             </button>
           );
         })}

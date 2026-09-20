@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { FacilityCard } from '@/components/facilities/FacilityCard';
 import { PageHero } from '@/components/ui/PageHero';
-import { facilities } from '@/data/facilities';
+import { fetchFacilities } from '@/lib/api/facilities';
 
 export const metadata: Metadata = {
   title: 'Facilities',
   description: 'Explore Casa Bella facilities and guest services.',
 };
 
-export default function FacilitiesPage() {
+export default async function FacilitiesPage() {
+  const facilities = await fetchFacilities();
+
   return (
     <>
       <PageHero
@@ -19,15 +21,17 @@ export default function FacilitiesPage() {
       />
       <section className="section">
         <div className="container">
-          <p className="alert alert--warn">
-            Facility list is illustrative. Confirm which amenities exist at Casa Bella
-            before launch.
-          </p>
-          <div className="grid-cards">
-            {facilities.map((facility) => (
-              <FacilityCard key={facility.id} facility={facility} />
-            ))}
-          </div>
+          {facilities.length === 0 ? (
+            <p className="alert">
+              Facilities will appear here once they are added in the admin panel.
+            </p>
+          ) : (
+            <div className="grid-cards">
+              {facilities.map((facility) => (
+                <FacilityCard key={facility.id} facility={facility} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>

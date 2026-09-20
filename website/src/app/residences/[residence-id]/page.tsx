@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { BookingSearch } from '@/components/booking/BookingSearch';
+import { UnitStayAvailabilityPanel } from '@/components/booking/UnitStayAvailabilityPanel';
 import { ResidenceCard } from '@/components/residences/ResidenceCard';
 import {
   fetchResidenceBySlug,
@@ -9,7 +8,10 @@ import {
 } from '@/lib/api/residences';
 import { formatMoney } from '@/lib/booking';
 
-type Props = { params: Promise<{ 'residence-id': string }> };
+type Props = {
+  params: Promise<{ 'residence-id': string }>;
+  searchParams: Promise<{ checkIn?: string; checkOut?: string }>;
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -23,9 +25,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ResidenceDetailPage({ params }: Props) {
+export default async function ResidenceDetailPage({
+  params,
+  searchParams,
+}: Props) {
   const { 'residence-id': id } = await params;
-  const residence = await fetchResidenceBySlug(id);
+  const query = await searchParams;
+  const checkIn = query.checkIn?.trim() || undefined;
+  const checkOut = query.checkOut?.trim() || undefined;
+  const dates =
+    checkIn && checkOut ? { checkIn, checkOut } : undefined;
+
+  const residence = await fetchResidenceBySlug(id, dates);
   if (!residence) notFound();
 
   const all = await fetchResidences().catch(() => []);
@@ -54,6 +65,9 @@ export default async function ResidenceDetailPage({ params }: Props) {
           <div>
             <span className="badge">{residence.type}</span>
             <h1 style={{ marginTop: '0.75rem' }}>{residence.name}</h1>
+            {residence.roomNumber ? (
+              <p className="eyebrow">Unit {residence.roomNumber}</p>
+            ) : null}
             <p className="lead">{residence.description}</p>
             <div className="card__meta">
               <span>
@@ -70,7 +84,7 @@ export default async function ResidenceDetailPage({ params }: Props) {
             </p>
             {residence.amenities.length > 0 ? (
               <>
-                <h3>Amenities</h3>
+                <h3>Facilities</h3>
                 <ul className="amenity-list">
                   {residence.amenities.map((item) => (
                     <li key={item.id}>{item.name}</li>
@@ -78,20 +92,15 @@ export default async function ResidenceDetailPage({ params }: Props) {
                 </ul>
               </>
             ) : null}
-            <div style={{ marginTop: '1.25rem' }}>
-              <Link
-                href={`/booking?type=residence&id=${residence.id}`}
-                className="btn btn--primary"
-              >
-                Book this residence
-              </Link>
-            </div>
           </div>
           <div>
-            <BookingSearch
-              compact
-              defaultType="residence"
-              propertyId={residence.id}
+            <UnitStayAvailabilityPanel
+              unitId={residence.id}
+              unitName={residence.name}
+              propertyType="residence"
+              nightlyRate={residence.startingPrice.amount}
+              maxGuests={residence.guests}
+              detailPath={`/residences/${residence.slug}`}
             />
           </div>
         </div>

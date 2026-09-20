@@ -51,6 +51,13 @@ export const APP_NAV_ITEMS: NavItem[] = [
     breadcrumb: ['Home', 'Online Bookings'],
   },
   {
+    id: 'website-facilities',
+    label: 'Website Facilities',
+    path: '/website-facilities',
+    title: 'Website Facilities',
+    breadcrumb: ['Home', 'Website Facilities'],
+  },
+  {
     id: 'payments',
     label: 'Payments',
     path: '/payments',
