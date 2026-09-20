@@ -14,6 +14,12 @@ export type Unit = {
   dailyRate?: string | null;
   hourlyRate?: string | null;
   notes?: string | null;
+  displayName?: string | null;
+  description?: string | null;
+  maxGuests?: number | null;
+  bedConfiguration?: string | null;
+  amenities?: string[] | null;
+  imageUrls?: string[] | null;
   propertyId: string;
   property?: { id: string; name: string };
 };
@@ -29,6 +35,12 @@ export type UnitInput = {
   hourlyRate?: number;
   status?: UnitStatus;
   notes?: string;
+  displayName?: string;
+  description?: string;
+  maxGuests?: number;
+  bedConfiguration?: string;
+  amenitiesText?: string;
+  imageUrl?: string;
   isActive?: boolean;
 };
 
@@ -43,6 +55,12 @@ export type UnitFormValues = {
   hourlyRate: string;
   status: UnitStatus;
   notes: string;
+  displayName: string;
+  description: string;
+  maxGuests: string;
+  bedConfiguration: string;
+  amenitiesText: string;
+  imageUrl: string;
   isActive: boolean;
 };
 

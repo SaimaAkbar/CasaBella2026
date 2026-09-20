@@ -68,6 +68,8 @@ export type UnitGridAllowedActions = {
   newBooking: boolean;
   checkIn: boolean;
   checkOut: boolean;
+  cancelBooking: boolean;
+  markNoShow: boolean;
   receivePayment: boolean;
   markEmpty: boolean;
   markOccupied: boolean;

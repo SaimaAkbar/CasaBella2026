@@ -1,5 +1,6 @@
 import { formatLabel, formatPkr } from '../../lib/format';
 import type { Payment } from '../../types/payment';
+import { PrintReceiptActions } from '../receipts/PrintReceiptActions';
 import { DateTimeDisplay } from '../ui/DateTimeDisplay';
 import { FormModal } from '../ui/FormModal';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
@@ -8,25 +9,27 @@ import '../../styles/forms.css';
 type PaymentDetailModalProps = {
   open: boolean;
   payment: Payment | null;
+  token?: string;
   canRefund: boolean;
   canReverse: boolean;
   busy: boolean;
   onClose: () => void;
   onRefund: () => void;
   onReverse: () => void;
-  onPrint: () => void;
+  onPrintError?: (message: string) => void;
 };
 
 export function PaymentDetailModal({
   open,
   payment,
+  token,
   canRefund,
   canReverse,
   busy,
   onClose,
   onRefund,
   onReverse,
-  onPrint,
+  onPrintError,
 }: PaymentDetailModalProps) {
   if (!payment) return null;
 
@@ -126,10 +129,15 @@ export function PaymentDetailModal({
         ) : null}
       </dl>
 
+      {token && payment.status === 'COMPLETED' ? (
+        <PrintReceiptActions
+          token={token}
+          target={{ sourceType: 'payment', sourceId: payment.id }}
+          onError={onPrintError}
+        />
+      ) : null}
+
       <div className="form-actions" style={{ flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn--primary" onClick={onPrint}>
-          Print Receipt
-        </button>
         {canRefund &&
         payment.transactionType === 'PAYMENT' &&
         payment.status === 'COMPLETED' ? (

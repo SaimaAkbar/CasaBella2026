@@ -46,12 +46,6 @@ describe('staff mutation approval routing', () => {
     expect(
       shouldQueueStaffMutation(
         'POST',
-        '/bookings/11111111-1111-1111-1111-111111111111/cancel',
-      ),
-    ).toBe(true);
-    expect(
-      shouldQueueStaffMutation(
-        'POST',
         '/bookings/11111111-1111-1111-1111-111111111111/confirm',
       ),
     ).toBe(true);
@@ -78,7 +72,31 @@ describe('staff mutation approval routing', () => {
     expect(
       shouldQueueStaffMutation(
         'POST',
+        '/bookings/11111111-1111-1111-1111-111111111111/cancel',
+      ),
+    ).toBe(false);
+    expect(
+      shouldQueueStaffMutation(
+        'POST',
+        '/bookings/11111111-1111-1111-1111-111111111111/no-show',
+      ),
+    ).toBe(false);
+    expect(
+      shouldQueueStaffMutation(
+        'POST',
         '/electricity-readings/11111111-1111-1111-1111-111111111111/record-payment',
+      ),
+    ).toBe(false);
+    expect(
+      shouldQueueStaffMutation(
+        'POST',
+        '/online-bookings/payments/11111111-1111-1111-1111-111111111111/verify',
+      ),
+    ).toBe(false);
+    expect(
+      shouldQueueStaffMutation(
+        'POST',
+        '/online-bookings/payments/11111111-1111-1111-1111-111111111111/reject',
       ),
     ).toBe(false);
     expect(

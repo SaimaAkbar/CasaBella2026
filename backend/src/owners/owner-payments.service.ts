@@ -18,6 +18,7 @@ import type { AuditContext } from '../common/types/audit-context.type';
 import type { AuthUser } from '../common/types/auth-user.type';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
+import { ReceiptNumberService } from '../receipts/receipt-number.service';
 import {
   AdjustOwnerPaymentDto,
   CreateOwnerPaymentDto,
@@ -48,6 +49,7 @@ export class OwnerPaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settingsService: SettingsService,
+    private readonly receiptNumbers: ReceiptNumberService,
     private readonly auditLogs: AuditLogsService,
     private readonly ownersService: OwnersService,
     private readonly statementsService: OwnerMonthlyStatementsService,
@@ -84,6 +86,7 @@ export class OwnerPaymentsService {
       }
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const notes =
         amount.greaterThan(statement.remainingAmount) && dto.overpayReason
           ? `${dto.notes?.trim() ? `${dto.notes.trim()}; ` : ''}OVERPAY_REASON:${dto.overpayReason.trim()}`
@@ -92,6 +95,7 @@ export class OwnerPaymentsService {
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: PaymentForType.OWNER,
           ownerMonthlyStatementId: statement.id,
           ownerId: statement.ownerId,
@@ -258,9 +262,11 @@ export class OwnerPaymentsService {
       }
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const reversal = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: PaymentForType.OWNER,
           ownerMonthlyStatementId: original.ownerMonthlyStatementId,
           ownerId: original.ownerId,
@@ -345,9 +351,11 @@ export class OwnerPaymentsService {
       });
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: PaymentForType.OWNER,
           ownerMonthlyStatementId: statement.id,
           ownerId: statement.ownerId,

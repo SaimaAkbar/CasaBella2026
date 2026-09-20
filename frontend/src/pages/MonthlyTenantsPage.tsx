@@ -45,6 +45,7 @@ import { TenancyFormModal } from '../components/monthly-tenants/TenancyFormModal
 import { ManageAssignedUnitsModal } from '../components/monthly-tenants/ManageAssignedUnitsModal';
 import { PlaceHotelGuestWizard } from '../components/monthly-tenants/PlaceHotelGuestWizard';
 import { PaymentFormModal } from '../components/payments/PaymentFormModal';
+import { PrintLatestReceiptButton } from '../components/receipts/PrintLatestReceiptButton';
 import { PageHeader } from '../components/PageHeader';
 import { SummaryCard } from '../components/dashboard/SummaryCard';
 import { FormModal } from '../components/ui/FormModal';
@@ -949,6 +950,7 @@ export function MonthlyTenantsPage() {
       className: 'data-table__col--actions',
       render: (row) => {
         const finance = financeFor(row);
+        const canPrintBill = Boolean(token);
         return (
           <div className="data-table__actions">
             <button
@@ -966,6 +968,13 @@ export function MonthlyTenantsPage() {
               >
                 Receive Payment
               </button>
+            ) : null}
+            {canPrintBill ? (
+              <PrintLatestReceiptButton
+                token={token!}
+                monthlyTenancyId={row.id}
+                onError={(message) => setToast({ message, tone: 'error' })}
+              />
             ) : null}
             <RowMoreMenu
               items={[
@@ -1913,6 +1922,7 @@ export function MonthlyTenantsPage() {
         canAddPayment={canAddPayment}
         paymentRefreshKey={paymentRefreshKey}
         onAddPayment={() => setShowPaymentForm(true)}
+        onReprintError={(message) => setToast({ message, tone: 'error' })}
         onClose={() => setShowTenancyDetail(false)}
         onMarkEmpty={() =>
           selectedTenancy && void runOccupancy(selectedTenancy, 'empty')

@@ -101,7 +101,6 @@ export class BookingsController {
   }
 
   @Post(':id/no-show')
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   markNoShow(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthUser,

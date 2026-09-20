@@ -1,5 +1,6 @@
 import type { Booking } from '../../types/booking';
 import { PaymentHistoryList } from '../payments/PaymentHistoryList';
+import { PrintLatestReceiptButton } from '../receipts/PrintLatestReceiptButton';
 import { FormModal } from '../ui/FormModal';
 import { BookingStatusBadge } from '../ui/BookingStatusBadge';
 import { DateTimeDisplay } from '../ui/DateTimeDisplay';
@@ -21,6 +22,7 @@ type BookingDetailModalProps = {
   canAddPayment?: boolean;
   paymentRefreshKey?: number;
   onAddPayment?: () => void;
+  onReprintError?: (message: string) => void;
   canEdit?: boolean;
   onEdit?: () => void;
   onClose: () => void;
@@ -47,6 +49,7 @@ export function BookingDetailModal({
   canAddPayment = false,
   paymentRefreshKey = 0,
   onAddPayment,
+  onReprintError,
   canEdit = false,
   onEdit,
   onClose,
@@ -90,6 +93,16 @@ export function BookingDetailModal({
         <div>
           <dt>Booking Type</dt>
           <dd>{booking.bookingType}</dd>
+        </div>
+        <div>
+          <dt>Source</dt>
+          <dd>
+            {booking.bookingSource === 'ONLINE' ? (
+              <span className="daily-guests-page__online-badge">ONLINE / WEBSITE</span>
+            ) : (
+              booking.bookingSource || 'WALK-IN / POS'
+            )}
+          </dd>
         </div>
         <div>
           <dt>
@@ -263,10 +276,19 @@ export function BookingDetailModal({
           canAddPayment={canAddPayment}
           onAddPayment={onAddPayment}
           refreshKey={paymentRefreshKey}
+          onReprintError={onReprintError}
         />
       ) : null}
 
       <div className="form-actions" style={{ flexWrap: 'wrap' }}>
+        {token ? (
+          <PrintLatestReceiptButton
+            token={token}
+            bookingId={booking.id}
+            className="btn btn--primary"
+            onError={onReprintError}
+          />
+        ) : null}
         {canEdit && onEdit ? (
           <button
             type="button"
@@ -319,7 +341,9 @@ export function BookingDetailModal({
             Cancel
           </button>
         ) : null}
-        {canNoShow && booking.bookingStatus === 'CONFIRMED' ? (
+        {canNoShow &&
+        (booking.bookingStatus === 'CONFIRMED' ||
+          booking.bookingStatus === 'PENDING') ? (
           <button
             type="button"
             className="btn btn--ghost"

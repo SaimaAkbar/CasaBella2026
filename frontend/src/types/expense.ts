@@ -259,6 +259,7 @@ export type ElectricityReading = {
   billingYear: number;
   notes: string | null;
   expenseId: string | null;
+  expensePaymentId?: string;
   property?: { id: string; name: string } | null;
   unit?: { id: string; unitNumber: string; propertyId: string } | null;
   expense?: {

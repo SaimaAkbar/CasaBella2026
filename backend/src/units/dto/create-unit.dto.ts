@@ -61,6 +61,34 @@ export class CreateUnitDto {
   notes?: string;
 
   @IsOptional()
+  @IsString()
+  displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  maxGuests?: number;
+
+  @IsOptional()
+  @IsString()
+  bedConfiguration?: string;
+
+  /** Comma-separated amenity labels stored as JSON string array. */
+  @IsOptional()
+  @IsString()
+  amenitiesText?: string;
+
+  /** Primary image URL (stored in imageUrls[0]). */
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 }

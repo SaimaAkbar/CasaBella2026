@@ -18,6 +18,8 @@ const ALLOWED_PREFIXES = [
   '/system/maintenance',
   '/backups',
   '/settings/public',
+  '/public',
+  '/payments/safepay',
 ];
 
 @Injectable()

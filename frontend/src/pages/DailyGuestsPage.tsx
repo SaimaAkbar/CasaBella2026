@@ -8,6 +8,7 @@ import {
   createBooking,
   fetchBookingSummary,
   fetchBookings,
+  fetchBooking,
   markAccountsCleared,
   markBookingNoShow,
   markCleaningCleared,
@@ -21,6 +22,7 @@ import { BookingDetailModal } from '../components/daily-guests/BookingDetailModa
 import { BookingFormModal } from '../components/daily-guests/BookingFormModal';
 import { GuestFormModal } from '../components/daily-guests/GuestFormModal';
 import { PaymentFormModal } from '../components/payments/PaymentFormModal';
+import { PrintLatestReceiptButton } from '../components/receipts/PrintLatestReceiptButton';
 import { SummaryCard } from '../components/dashboard/SummaryCard';
 import { PageHeader } from '../components/PageHeader';
 import { BookingStatusBadge } from '../components/ui/BookingStatusBadge';
@@ -127,7 +129,7 @@ export function DailyGuestsPage() {
   const canCheckIn = canConfirm;
   const canCheckOut = canConfirm;
   const canCancel = canConfirm;
-  const canNoShow = isSuperAdmin || isAdmin;
+  const canNoShow = canConfirm;
   const canClearFlags = canConfirm;
 
   const [tab, setTab] = useState<TabKey>('bookings');
@@ -183,6 +185,7 @@ export function DailyGuestsPage() {
   const [savingGuest, setSavingGuest] = useState(false);
   const [savingBooking, setSavingBooking] = useState(false);
   const consumedDashboardNav = useRef(false);
+  const consumedBookingDeepLink = useRef<string | null>(null);
 
   const [selected, setSelected] = useState<Booking | null>(null);
   const [showDetail, setShowDetail] = useState(false);
@@ -401,6 +404,40 @@ export function DailyGuestsPage() {
       setSearchParams(next, { replace: true });
     }
   }, [location.state, location.pathname, navigate, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const bookingId = searchParams.get('booking');
+    if (!token || !bookingId) return;
+    if (consumedBookingDeepLink.current === bookingId) return;
+    consumedBookingDeepLink.current = bookingId;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const hit =
+          bookings.find((row) => row.id === bookingId) ??
+          (await fetchBooking(token, bookingId));
+        if (cancelled) return;
+        setTab('bookings');
+        setSelected(hit);
+        setShowDetail(true);
+        const next = new URLSearchParams(searchParams);
+        next.delete('booking');
+        setSearchParams(next, { replace: true });
+      } catch (err) {
+        if (cancelled) return;
+        consumedBookingDeepLink.current = null;
+        setToast({
+          message: handleApiError(err, 'Unable to open online booking.'),
+          tone: 'error',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, searchParams, bookings, setSearchParams, handleApiError]);
 
   async function handleSaveGuest(payload: GuestInput) {
     if (!token) return;
@@ -623,7 +660,16 @@ export function DailyGuestsPage() {
     {
       key: 'guest',
       header: 'Guest Name',
-      render: (row) => row.guest?.fullName ?? '—',
+      render: (row) => (
+        <span className="daily-guests-page__guest-cell">
+          <span>{row.guest?.fullName ?? '—'}</span>
+          {row.bookingSource === 'ONLINE' ? (
+            <span className="daily-guests-page__online-badge" title="Booked from website">
+              ONLINE
+            </span>
+          ) : null}
+        </span>
+      ),
     },
     {
       key: 'type',
@@ -696,15 +742,19 @@ export function DailyGuestsPage() {
             row.bookingStatus === 'CHECKED_IN');
         const canCancelStay =
           canCancel &&
-          (isReceptionist
-            ? row.bookingStatus === 'PENDING'
-            : row.bookingStatus === 'PENDING' ||
-              row.bookingStatus === 'CONFIRMED');
+          (row.bookingStatus === 'PENDING' ||
+            row.bookingStatus === 'CONFIRMED');
+        const canNoShow =
+          canCancel &&
+          (row.bookingStatus === 'PENDING' ||
+            row.bookingStatus === 'CONFIRMED');
         const canPay =
           canCreate &&
           moneyDue(row.remainingAmount) &&
           row.bookingStatus !== 'CANCELLED' &&
           row.bookingStatus !== 'NO_SHOW';
+        const canPrintBill =
+          Boolean(token) && row.bookingStatus !== 'CANCELLED';
 
         return (
           <div className="data-table__actions">
@@ -731,6 +781,13 @@ export function DailyGuestsPage() {
               >
                 Check In
               </button>
+            ) : null}
+            {canPrintBill ? (
+              <PrintLatestReceiptButton
+                token={token!}
+                bookingId={row.id}
+                onError={(message) => setToast({ message, tone: 'error' })}
+              />
             ) : null}
             <RowMoreMenu
               items={[
@@ -785,11 +842,19 @@ export function DailyGuestsPage() {
               },
               {
                 id: 'cancel',
-                label: 'Cancel booking',
+                label: 'Cancel booking & free room',
                 danger: true,
                 hidden: !canCancelStay,
                 onClick: () =>
                   setConfirmAction({ type: 'cancel', booking: row }),
+              },
+              {
+                id: 'noshow',
+                label: 'Mark no-show & free room',
+                danger: true,
+                hidden: !canNoShow,
+                onClick: () =>
+                  setConfirmAction({ type: 'noshow', booking: row }),
               },
             ]}
           />
@@ -882,20 +947,22 @@ export function DailyGuestsPage() {
   const confirmCopy = confirmAction
     ? {
         cancel: {
-          title: 'Cancel booking?',
-          message: 'This will mark the booking as CANCELLED. History is kept.',
-          label: 'Cancel Booking',
+          title: 'Cancel booking and free room?',
+          message:
+            'This marks the booking as CANCELLED. The room becomes Available again for new bookings.',
+          label: 'Cancel & Free Room',
         },
         checkout: {
           title: 'Check out now?',
           message:
-            'Check-out date and time will be set to now. If the guest is leaving early, room charges use the nights actually stayed. The room will become CLEANING_REQUIRED until cleaning and accounts are cleared.',
+            'Check-out date and time will be set to now. If the guest is leaving early, room charges use the nights actually stayed. The room will become CLEANING_REQUIRED until cleaning and accounts are cleared — then it becomes Available.',
           label: 'Check Out',
         },
         noshow: {
-          title: 'Mark as no-show?',
-          message: 'Confirmed booking will be marked NO_SHOW. Unit stays unchanged.',
-          label: 'Mark No-Show',
+          title: 'Mark as no-show and free room?',
+          message:
+            'Use this when the guest did not arrive. Booking becomes NO_SHOW and the room is Available again.',
+          label: 'Mark No-Show & Free Room',
         },
         checkin: {
           title: 'Check in guest?',
@@ -1283,6 +1350,7 @@ export function DailyGuestsPage() {
         canAddPayment={canCreate}
         paymentRefreshKey={paymentRefreshKey}
         onAddPayment={() => setShowPaymentForm(true)}
+        onReprintError={(message) => setToast({ message, tone: 'error' })}
         canEdit={
           canConfirm &&
           (selected?.bookingStatus === 'PENDING' ||

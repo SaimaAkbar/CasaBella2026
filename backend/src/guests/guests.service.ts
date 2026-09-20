@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -157,6 +158,99 @@ export class GuestsService {
     }
 
     return guest;
+  }
+
+  /**
+   * Match guest for online checkout: cnicOrPassport (exact trim) → phone → email.
+   * Updates non-empty fields on match; creates when none found. No role check.
+   */
+  async findOrCreateForOnline(dto: CreateGuestDto) {
+    const cnic = dto.cnicOrPassport?.trim() || undefined;
+    const phone = dto.phone?.trim() || undefined;
+    const email = dto.email?.trim() || undefined;
+
+    let guest =
+      (cnic
+        ? await this.prisma.guest.findFirst({
+            where: { cnicOrPassport: cnic },
+          })
+        : null) ??
+      (phone
+        ? await this.prisma.guest.findFirst({ where: { phone } })
+        : null) ??
+      (email
+        ? await this.prisma.guest.findFirst({ where: { email } })
+        : null);
+
+    const patch: Prisma.GuestUpdateInput = {};
+    const assignIfPresent = (
+      key: keyof CreateGuestDto,
+      value: string | undefined,
+    ) => {
+      if (value !== undefined && value !== '') {
+        (patch as Record<string, string>)[key] = value;
+      }
+    };
+
+    assignIfPresent('fullName', dto.fullName?.trim());
+    assignIfPresent('phone', phone);
+    assignIfPresent('alternatePhone', dto.alternatePhone?.trim());
+    assignIfPresent('email', email);
+    assignIfPresent('cnicOrPassport', cnic);
+    assignIfPresent('address', dto.address?.trim());
+    assignIfPresent('nationality', dto.nationality?.trim());
+    assignIfPresent('emergencyContactName', dto.emergencyContactName?.trim());
+    assignIfPresent('emergencyContactPhone', dto.emergencyContactPhone?.trim());
+    assignIfPresent('vehicleNumber', dto.vehicleNumber?.trim());
+    assignIfPresent('notes', dto.notes?.trim());
+
+    try {
+      if (guest) {
+        if (Object.keys(patch).length > 0) {
+          guest = await this.prisma.guest.update({
+            where: { id: guest.id },
+            data: { ...patch, isActive: true },
+          });
+        } else if (!guest.isActive) {
+          guest = await this.prisma.guest.update({
+            where: { id: guest.id },
+            data: { isActive: true },
+          });
+        }
+        return guest;
+      }
+
+      if (!dto.fullName?.trim() || !phone) {
+        throw new BadRequestException(
+          'fullName and phone are required to create a guest',
+        );
+      }
+
+      return await this.prisma.guest.create({
+        data: {
+          fullName: dto.fullName.trim(),
+          phone,
+          alternatePhone: dto.alternatePhone?.trim() || null,
+          email: email || null,
+          cnicOrPassport: cnic || null,
+          address: dto.address?.trim() || null,
+          nationality: dto.nationality?.trim() || null,
+          emergencyContactName: dto.emergencyContactName?.trim() || null,
+          emergencyContactPhone: dto.emergencyContactPhone?.trim() || null,
+          vehicleNumber: dto.vehicleNumber?.trim() || null,
+          notes: dto.notes?.trim() || null,
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.handlePrismaError(error, 'Unable to find or create guest');
+    }
   }
 
   private assertCanWrite(role: Role) {

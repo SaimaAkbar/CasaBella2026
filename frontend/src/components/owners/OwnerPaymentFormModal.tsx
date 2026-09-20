@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createOwnerPayment } from '../../api/owners';
+import { PrintReceiptActions } from '../receipts/PrintReceiptActions';
 import { FormModal } from '../ui/FormModal';
+import type { ReceiptPrintTarget } from '../../types/receipt';
 import { formatPkr } from '../../lib/format';
 import type { OwnerMonthlyStatement } from '../../types/owner';
 import '../../styles/forms.css';
@@ -41,9 +43,13 @@ export function OwnerPaymentFormModal({
   const [transactionReference, setTransactionReference] = useState('');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [printTarget, setPrintTarget] = useState<ReceiptPrintTarget | null>(null);
 
   useEffect(() => {
     if (!open || !statement) return;
+    setSaved(false);
+    setPrintTarget(null);
     setAmount(statement.remainingAmount);
     setPaymentMethod('CASH');
     setPaymentDate(new Date().toISOString().slice(0, 10));
@@ -58,7 +64,7 @@ export function OwnerPaymentFormModal({
     if (!statement || busy) return;
     setBusy(true);
     try {
-      await createOwnerPayment(token, {
+      const payment = await createOwnerPayment(token, {
         ownerMonthlyStatementId: statement.id,
         amount: Number(amount),
         paymentMethod,
@@ -68,8 +74,9 @@ export function OwnerPaymentFormModal({
         transactionReference: transactionReference.trim() || undefined,
         notes: notes.trim() || undefined,
       });
+      setPrintTarget({ sourceType: 'owner_payment', sourceId: payment.id });
+      setSaved(true);
       onSaved();
-      onClose();
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Unable to record payment');
     } finally {
@@ -82,7 +89,26 @@ export function OwnerPaymentFormModal({
   }
 
   return (
-    <FormModal open={open} title="Record Owner Payment" onClose={onClose}>
+    <FormModal
+      open={open}
+      title={saved ? 'Payment Recorded' : 'Record Owner Payment'}
+      onClose={onClose}
+    >
+      {saved ? (
+        <>
+          <p className="form-hint">Owner payment saved successfully.</p>
+          <PrintReceiptActions
+            token={token}
+            target={printTarget}
+            onError={onError}
+          />
+          <div className="form-actions">
+            <button type="button" className="btn btn--primary" onClick={onClose}>
+              Done
+            </button>
+          </div>
+        </>
+      ) : (
       <form className="form-grid" onSubmit={onSubmit}>
         <div className="form-grid form-grid--2">
           <label className="form-field">
@@ -205,6 +231,7 @@ export function OwnerPaymentFormModal({
           </button>
         </div>
       </form>
+      )}
     </FormModal>
   );
 }

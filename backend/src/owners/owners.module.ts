@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+import { ReceiptsModule } from '../receipts/receipts.module';
 import { SettingsModule } from '../settings/settings.module';
 import { OwnerMonthlyStatementsController } from './owner-monthly-statements.controller';
 import { OwnerMonthlyStatementsService } from './owner-monthly-statements.service';
@@ -11,7 +12,7 @@ import { OwnersController } from './owners.controller';
 import { OwnersService } from './owners.service';
 
 @Module({
-  imports: [AuditLogsModule, SettingsModule],
+  imports: [AuditLogsModule, SettingsModule, ReceiptsModule],
   controllers: [
     OwnersController,
     OwnerUnitAssignmentsController,

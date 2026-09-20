@@ -76,6 +76,22 @@
   cursor: not-allowed;
 }
 
+.unit-detail__free-room {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--border);
+}
+
+.unit-detail__btn--danger {
+  border-color: #f1b4b4 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
 @media (max-width: 560px) {
   .unit-detail__facts {
     grid-template-columns: 1fr;

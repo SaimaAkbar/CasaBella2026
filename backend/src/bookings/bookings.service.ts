@@ -686,10 +686,6 @@ export class BookingsService {
   async cancel(id: string, role: Role) {
     this.assertCanMutateBookings(role);
 
-    if (role === Role.RECEPTIONIST) {
-      // Receptionist may cancel PENDING only; Admin+ can cancel CONFIRMED too
-    }
-
     const existing = await this.getBookingOrThrow(id);
 
     if (
@@ -701,20 +697,12 @@ export class BookingsService {
       );
     }
 
-    if (
-      role === Role.RECEPTIONIST &&
-      existing.bookingStatus !== BookingStatus.PENDING
-    ) {
-      throw new ForbiddenException(
-        'Receptionist can only cancel PENDING bookings',
-      );
-    }
-
     const booking = await this.prisma.booking.update({
       where: { id },
       data: {
         bookingStatus: BookingStatus.CANCELLED,
         cancelledAt: new Date(),
+        paymentHoldExpiresAt: null,
       },
       include: bookingInclude,
     });
@@ -723,21 +711,25 @@ export class BookingsService {
   }
 
   async markNoShow(id: string, role: Role) {
-    if (role !== Role.SUPER_ADMIN && role !== Role.ADMIN) {
-      throw new ForbiddenException('Insufficient permissions for no-show');
-    }
+    this.assertCanMutateBookings(role);
 
     const existing = await this.getBookingOrThrow(id);
 
-    if (existing.bookingStatus !== BookingStatus.CONFIRMED) {
+    if (
+      existing.bookingStatus !== BookingStatus.CONFIRMED &&
+      existing.bookingStatus !== BookingStatus.PENDING
+    ) {
       throw new BadRequestException(
-        'Only CONFIRMED bookings can be marked as no-show',
+        'Only PENDING or CONFIRMED bookings can be marked as no-show',
       );
     }
 
     const booking = await this.prisma.booking.update({
       where: { id },
-      data: { bookingStatus: BookingStatus.NO_SHOW },
+      data: {
+        bookingStatus: BookingStatus.NO_SHOW,
+        paymentHoldExpiresAt: null,
+      },
       include: bookingInclude,
     });
 

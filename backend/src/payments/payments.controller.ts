@@ -20,12 +20,16 @@ import { QueryPaymentsDto } from './dto/query-payments.dto';
 import { RefundPaymentDto } from './dto/refund-payment.dto';
 import { ReversePaymentDto } from './dto/reverse-payment.dto';
 import { PaymentsService } from './payments.service';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.RECEPTIONIST)
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly receiptsService: ReceiptsService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreatePaymentDto, @CurrentUser() user: AuthUser) {
@@ -39,13 +43,13 @@ export class PaymentsController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   findAll(@Query() query: QueryPaymentsDto, @CurrentUser() user: AuthUser) {
     return this.paymentsService.findAll(query, user.role);
   }
 
   @Get('summary/stats')
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   getSummary(@Query() query: QueryPaymentsDto, @CurrentUser() user: AuthUser) {
     return this.paymentsService.getSummary(query, user.role);
   }
@@ -80,8 +84,17 @@ export class PaymentsController {
     return this.paymentsService.listForTenancy(monthlyTenancyId, user.role);
   }
 
+  @Get(':id/receipt')
+  getReceipt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+    @Query('billingMonth') billingMonth?: string,
+  ) {
+    return this.receiptsService.getPaymentReceipt(id, user, billingMonth);
+  }
+
   @Get(':id')
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthUser,

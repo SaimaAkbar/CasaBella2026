@@ -75,6 +75,7 @@ export type Payment = {
 };
 
 export type PaymentReceipt = {
+  receiptNumber?: string;
   hotelOrPropertyName: string;
   paymentNumber: string;
   paymentDateTime: string;

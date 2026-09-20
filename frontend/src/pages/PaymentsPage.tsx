@@ -41,10 +41,11 @@ export function PaymentsPage() {
 
   const role = user?.role;
   const isSuperAdmin = role === 'SUPER_ADMIN';
-  const canRecord = Boolean(role);
+  const isAdmin = role === 'ADMIN';
+  const canRecord = isSuperAdmin || isAdmin;
   const canRefund = isSuperAdmin;
   const canReverse = isSuperAdmin;
-  const canViewFullSummary = role !== 'RECEPTIONIST';
+  const canViewFullSummary = isSuperAdmin || isAdmin;
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
@@ -139,53 +140,6 @@ export function PaymentsPage() {
         tone: 'error',
       });
     }
-  }
-
-  function printReceipt(payment: Payment) {
-    const receipt = payment.receipt;
-    if (!receipt) {
-      setToast({ message: 'Receipt data is unavailable.', tone: 'error' });
-      return;
-    }
-
-    const html = `
-      <html><head><title>${receipt.paymentNumber}</title>
-      <style>
-        body { font-family: Georgia, serif; padding: 24px; color: #111; }
-        h1 { margin: 0 0 8px; }
-        .meta { color: #555; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 6px 0; border-bottom: 1px solid #eee; }
-        td:last-child { text-align: right; font-weight: 600; }
-      </style></head><body>
-      <h1>${receipt.hotelOrPropertyName}</h1>
-      <div class="meta">Payment Receipt · ${receipt.paymentNumber}</div>
-      <table>
-        <tr><td>Date</td><td>${new Date(receipt.paymentDateTime).toLocaleString()}</td></tr>
-        <tr><td>Payer</td><td>${receipt.payerName}</td></tr>
-        <tr><td>Property / Unit</td><td>${receipt.property} / ${receipt.unit}</td></tr>
-        <tr><td>Type</td><td>${receipt.paymentType} / ${receipt.transactionType}</td></tr>
-        <tr><td>Method</td><td>${receipt.paymentMethod}</td></tr>
-        <tr><td>Reference</td><td>${receipt.transactionReference || '—'}</td></tr>
-        <tr><td>Total Payable</td><td>${formatPkr(receipt.totalPayable)}</td></tr>
-        <tr><td>Previous Received</td><td>${formatPkr(receipt.previousReceived)}</td></tr>
-        <tr><td>Current Payment</td><td>${formatPkr(receipt.currentPayment)}</td></tr>
-        <tr><td>Total Received</td><td>${formatPkr(receipt.totalReceived)}</td></tr>
-        <tr><td>Remaining</td><td>${formatPkr(receipt.remainingBalance)}</td></tr>
-        <tr><td>Received By</td><td>${receipt.receivedBy}</td></tr>
-        <tr><td>Notes</td><td>${receipt.notes || '—'}</td></tr>
-      </table>
-      </body></html>`;
-
-    const win = window.open('', '_blank', 'noopener,noreferrer,width=720,height=900');
-    if (!win) {
-      setToast({ message: 'Popup blocked. Allow popups to print.', tone: 'error' });
-      return;
-    }
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
   }
 
   async function confirmRefund() {
@@ -576,6 +530,7 @@ export function PaymentsPage() {
       <PaymentDetailModal
         open={showDetail}
         payment={selected}
+        token={token ?? undefined}
         canRefund={canRefund}
         canReverse={canReverse}
         busy={busy}
@@ -591,7 +546,7 @@ export function PaymentsPage() {
           setReverseTarget(selected);
           setReverseReason('');
         }}
-        onPrint={() => selected && printReceipt(selected)}
+        onPrintError={(message) => setToast({ message, tone: 'error' })}
       />
 
       <ConfirmDialog

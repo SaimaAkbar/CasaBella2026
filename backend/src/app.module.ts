@@ -26,11 +26,13 @@ import { MonthlyBillsModule } from './monthly-bills/monthly-bills.module';
 import { MonthlyTenanciesModule } from './monthly-tenancies/monthly-tenancies.module';
 import { MonthlyTenantsModule } from './monthly-tenants/monthly-tenants.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { OnlineBookingsModule } from './online-bookings/online-bookings.module';
 import { OwnersModule } from './owners/owners.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfitLossModule } from './profit-loss/profit-loss.module';
 import { PropertiesModule } from './properties/properties.module';
+import { ReceiptsModule } from './receipts/receipts.module';
 import { ReportsModule } from './reports/reports.module';
 import { RoomAssetsModule } from './room-assets/room-assets.module';
 import { SalaryRecordsModule } from './salary-records/salary-records.module';
@@ -72,7 +74,9 @@ import { StaffApprovalGateInterceptor } from './approvals/staff-approval-gate.in
     MonthlyBillsModule,
     GuestsModule,
     BookingsModule,
+    OnlineBookingsModule,
     PaymentsModule,
+    ReceiptsModule,
     ExpenseCategoriesModule,
     ExpensesModule,
     ElectricityReadingsModule,

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  cancelBooking,
   checkInBooking,
   checkOutBooking,
   markAccountsCleared,
+  markBookingNoShow,
   markCleaningCleared,
 } from '../../api/bookings';
 import { fetchDashboardUnitDetail } from '../../api/dashboard';
@@ -58,6 +60,9 @@ export function UnitDetailModal({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [confirmFree, setConfirmFree] = useState<'cancel' | 'noshow' | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!open || !unitId || !token) {
@@ -467,7 +472,45 @@ export function UnitDetailModal({
                 </button>
               ) : null}
 
+              {/* Guest assigned but not arrived / not staying — free the room */}
+              {(actions?.cancelBooking || actions?.markNoShow) &&
+              detail.bookingId &&
+              (detail.bookingStatus === 'PENDING' ||
+                detail.bookingStatus === 'CONFIRMED') ? (
+                <div className="unit-detail__free-room">
+                  <p className="unit-detail__hint">
+                    Guest not coming or booking cancelled? Free this room:
+                  </p>
+                  {actions.cancelBooking ? (
+                    <button
+                      type="button"
+                      className="unit-detail__btn--danger"
+                      disabled={busy}
+                      onClick={() => setConfirmFree('cancel')}
+                    >
+                      Cancel Booking &amp; Free Room
+                    </button>
+                  ) : null}
+                  {actions.markNoShow ? (
+                    <button
+                      type="button"
+                      className="unit-detail__btn--danger"
+                      disabled={busy}
+                      onClick={() => setConfirmFree('noshow')}
+                    >
+                      Mark No-Show &amp; Free Room
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+
               {/* CLEANING */}
+              {isCleaning ? (
+                <p className="unit-detail__hint">
+                  After early check-out, mark cleaning and accounts cleared to
+                  make this room Available again.
+                </p>
+              ) : null}
               {isCleaning &&
               actions?.markCleaningCleared &&
               clearanceBookingId ? (
@@ -605,6 +648,45 @@ export function UnitDetailModal({
           }}
           onError={(message) => setError(message)}
         />
+      ) : null}
+
+      {confirmFree && detail?.bookingId ? (
+        <FormModal
+          open
+          title={
+            confirmFree === 'cancel'
+              ? 'Cancel booking and free room?'
+              : 'Mark no-show and free room?'
+          }
+          onClose={() => setConfirmFree(null)}
+        >
+          <p className="unit-detail__hint">
+            {confirmFree === 'cancel'
+              ? 'This cancels the booking. The room will show as Available again.'
+              : 'Use this when the guest did not arrive. The room will show as Available again.'}
+          </p>
+          <div className="unit-detail__actions" style={{ marginTop: '1rem' }}>
+            <button type="button" disabled={busy} onClick={() => setConfirmFree(null)}>
+              Keep booking
+            </button>
+            <button
+              type="button"
+              className="unit-detail__btn--danger"
+              disabled={busy}
+              onClick={() => {
+                const id = detail.bookingId!;
+                const action =
+                  confirmFree === 'cancel'
+                    ? () => cancelBooking(token, id)
+                    : () => markBookingNoShow(token, id);
+                setConfirmFree(null);
+                void runAction(action);
+              }}
+            >
+              {confirmFree === 'cancel' ? 'Yes, cancel & free' : 'Yes, no-show & free'}
+            </button>
+          </div>
+        </FormModal>
       ) : null}
     </>
   );

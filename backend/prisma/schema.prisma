@@ -237,7 +237,25 @@ enum PaymentMethod {
   CARD
   EASYPAISA
   JAZZCASH
+  SAFEPAY
   OTHER
+}
+
+enum OnlinePaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  EXPIRED
+}
+
+/// Customer choice at website checkout: pay half now or settle in full.
+enum OnlinePaymentSelection {
+  ADVANCE_50
+  FULL_100
 }
 
 enum PaymentTransactionType {
@@ -407,6 +425,7 @@ model User {
   rentCreditsApproved            RentCredit[]             @relation("RentCreditApprovedBy")
   ownerAgreementRevisionsCreated OwnerAgreementRevision[] @relation("OwnerAgreementRevisionCreatedBy")
   rentRevisionsChanged           RentRevision[]           @relation("RentRevisionChangedBy")
+  onlinePaymentsVerified         OnlinePayment[]          @relation("OnlinePaymentVerifiedBy")
 }
 
 model ApprovalRequest {
@@ -585,6 +604,14 @@ model Unit {
   hourlyRate               Decimal?                @db.Decimal(12, 2)
   status                   UnitStatus              @default(AVAILABLE)
   notes                    String?
+  /// Public website marketing fields (optional; POS continues to work without them).
+  displayName              String?
+  description              String?
+  maxGuests                Int?
+  bedConfiguration         String?
+  amenities                Json?
+  imageUrls                Json?
+  publicListed             Boolean                 @default(true)
   isActive                 Boolean                 @default(true)
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
@@ -603,6 +630,7 @@ model Unit {
   @@index([unitType])
   @@index([status])
   @@index([isActive])
+  @@index([publicListed])
 }
 
 model MonthlyTenant {
@@ -820,6 +848,8 @@ model Booking {
   children                Int?
   bookingSource           String?
   notes                   String?
+  /// When set, unpaid ONLINE holds auto-cancel after this time.
+  paymentHoldExpiresAt    DateTime?
   actualCheckInAt         DateTime?
   actualCheckOutAt        DateTime?
   /**
@@ -836,6 +866,7 @@ model Booking {
   checkedOutByUserId      String?
   checkedOutBy            User?               @relation("BookingCheckedOutBy", fields: [checkedOutByUserId], references: [id])
   payments                Payment[]
+  onlinePayment           OnlinePayment?
   expenses                Expense[]
   inventoryMovements      InventoryMovement[]
   hotelUse                TenantUnitHotelUse?
@@ -846,10 +877,63 @@ model Booking {
   @@index([bookingStatus])
   @@index([occupancySource])
   @@index([paymentState])
+  @@index([bookingSource])
   @@index([checkInDateTime])
   @@index([checkOutDateTime])
+  @@index([paymentHoldExpiresAt])
   @@index([createdByUserId])
   @@index([checkedOutByUserId])
+}
+
+/// Online checkout session linked 1:1 to an ONLINE booking (Safepay or bank transfer).
+model OnlinePayment {
+  id                   String                  @id @default(uuid())
+  bookingId            String                  @unique
+  booking              Booking                 @relation(fields: [bookingId], references: [id])
+  guestId              String
+  /// SAFEPAY | BANK_TRANSFER
+  gateway              String                  @default("BANK_TRANSFER")
+  tracker              String?                 @unique
+  /// Expected amount for selected option (50% or 100% of booking total).
+  amount               Decimal                 @db.Decimal(12, 2)
+  /// Full stay total at checkout time (source of truth for remaining balance).
+  bookingTotalAmount   Decimal                 @db.Decimal(12, 2)
+  paymentSelection     OnlinePaymentSelection  @default(FULL_100)
+  currency             String                  @default("PKR")
+  status               OnlinePaymentStatus     @default(PENDING)
+  gatewayReference     String?
+  paymentResponse      Json?
+  webhookEventId       String?                 @unique
+  webhookReceivedAt    DateTime?
+  idempotencyKey       String                  @unique
+  checkoutUrl          String?
+  expiresAt            DateTime
+  /// Customer-claimed amount from bank transfer form.
+  submittedAmount      Decimal?                @db.Decimal(12, 2)
+  transactionReference String?
+  transferDate         DateTime?
+  senderName           String?
+  senderBank           String?
+  receiptPath          String?
+  verifiedByUserId     String?
+  verifiedBy           User?                   @relation("OnlinePaymentVerifiedBy", fields: [verifiedByUserId], references: [id])
+  verifiedAt           DateTime?
+  rejectionReason      String?
+  staffNotes           String?
+  /// POS ledger payment created after verified success.
+  paymentId            String?                 @unique
+  payment              Payment?                @relation(fields: [paymentId], references: [id])
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  @@index([guestId])
+  @@index([status])
+  @@index([gateway])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@index([paymentSelection])
+  @@index([transactionReference])
+  @@index([verifiedByUserId])
 }
 
 /// Temporary hotel guest placement on a monthly-tenant-assigned empty unit.
@@ -1022,6 +1106,10 @@ model ExpensePayment {
   isReversed           Boolean       @default(false)
   reversedAt           DateTime?
   reversalReason       String?
+  /// Unique thermal receipt number for this expense payment row.
+  receiptNumber        String?       @unique
+  lastPrintedAt        DateTime?
+  printCount           Int           @default(0)
   createdByUserId      String
   createdBy            User          @relation("ExpensePaymentCreatedBy", fields: [createdByUserId], references: [id])
   createdAt            DateTime      @default(now())
@@ -1250,10 +1338,15 @@ model Payment {
   approvedByUserId        String?
   approvedBy              User?                  @relation("PaymentApprovedBy", fields: [approvedByUserId], references: [id])
   approvedAt              DateTime?
+  /// Unique thermal receipt number (RC-YYYY-NNNNNN). Assigned at payment creation.
+  receiptNumber           String?                @unique
+  lastPrintedAt           DateTime?
+  printCount              Int                    @default(0)
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
 
-  rentCredit RentCredit?
+  rentCredit    RentCredit?
+  onlinePayment OnlinePayment?
 
   @@index([paymentForType])
   @@index([bookingId])

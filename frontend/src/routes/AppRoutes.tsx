@@ -15,6 +15,7 @@ import { InventoryPage } from '../pages/InventoryPage';
 import { LoginPage } from '../pages/LoginPage';
 import { MonthlyTenantsPage } from '../pages/MonthlyTenantsPage';
 import { NotificationsPage } from '../pages/NotificationsPage';
+import { OnlineBookingsPage } from '../pages/OnlineBookingsPage';
 import { OwnersPage } from '../pages/OwnersPage';
 import { PaymentsPage } from '../pages/PaymentsPage';
 import { ProfitLossPage } from '../pages/ProfitLossPage';
@@ -56,11 +57,14 @@ export function AppRoutes() {
           <Route path="/rooms" element={<UnitsPage />} />
           <Route path="/monthly-tenants" element={<MonthlyTenantsPage />} />
           <Route path="/daily-guests" element={<DailyGuestsPage />} />
+          <Route path="/online-bookings" element={<OnlineBookingsPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/profit-loss" element={<ProfitLossPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route element={<RoleRoute roles={['SUPER_ADMIN']} />}>
+          <Route element={<RoleRoute roles={['SUPER_ADMIN', 'ADMIN']} />}>
             <Route path="/payments" element={<PaymentsPage />} />
+          </Route>
+          <Route element={<RoleRoute roles={['SUPER_ADMIN']} />}>
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

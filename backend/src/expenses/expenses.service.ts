@@ -13,6 +13,7 @@ import {
 import type { AuthUser } from '../common/types/auth-user.type';
 import { ExpenseCategoriesService } from '../expense-categories/expense-categories.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReceiptNumberService } from '../receipts/receipt-number.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import {
   PropertyMonthViewQueryDto,
@@ -76,6 +77,7 @@ export class ExpensesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly categoriesService: ExpenseCategoriesService,
+    private readonly receiptNumbers: ReceiptNumberService,
   ) {}
 
   async create(dto: CreateExpenseDto, role: Role, userId: string) {
@@ -514,7 +516,8 @@ export class ExpensesService {
       existing.dueDate,
     );
     const expense = await this.prisma.$transaction(async (tx) => {
-      await tx.expensePayment.create({
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
+      const expensePayment = await tx.expensePayment.create({
         data: {
           expenseId: id,
           amount: amountPaid,
@@ -523,10 +526,11 @@ export class ExpensesService {
           bankName: dto.bankName?.trim(),
           transactionReference: dto.transactionReference?.trim(),
           notes: dto.notes?.trim(),
+          receiptNumber,
           createdByUserId: user.id,
         },
       });
-      return tx.expense.update({
+      const updated = await tx.expense.update({
         where: { id },
         data: {
           paidAmount: cappedPaid,
@@ -537,8 +541,12 @@ export class ExpensesService {
         },
         include: expenseInclude,
       });
+      return { expense: updated, expensePaymentId: expensePayment.id };
     });
-    return mapExpenseForRole(expense, user.role);
+    return {
+      ...mapExpenseForRole(expense.expense, user.role),
+      expensePaymentId: expense.expensePaymentId,
+    };
   }
 
   async bulkCreate(dto: BulkCreateExpensesDto, user: AuthUser) {

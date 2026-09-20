@@ -239,6 +239,10 @@ export type UnitGridAllowedActions = {
   newBooking: boolean;
   checkIn: boolean;
   checkOut: boolean;
+  /** Cancel PENDING/CONFIRMED assignment so the room is free again. */
+  cancelBooking: boolean;
+  /** Mark PENDING/CONFIRMED guest as no-show and free the room. */
+  markNoShow: boolean;
   receivePayment: boolean;
   markEmpty: boolean;
   markOccupied: boolean;
@@ -272,6 +276,14 @@ export function resolveAllowedActions(input: {
         input.resolved.status === UnitStatus.MONTHLY_TENANT_VACANT),
     checkIn: operational && input.hasConfirmedBooking,
     checkOut: operational && input.hasCheckedInBooking,
+    cancelBooking:
+      operational &&
+      !input.hasCheckedInBooking &&
+      (Boolean(input.hasConfirmedBooking) || Boolean(input.hasPendingBooking)),
+    markNoShow:
+      operational &&
+      !input.hasCheckedInBooking &&
+      (Boolean(input.hasConfirmedBooking) || Boolean(input.hasPendingBooking)),
     receivePayment:
       operational &&
       (input.hasCheckedInBooking ||

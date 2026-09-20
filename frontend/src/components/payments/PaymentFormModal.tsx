@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createPayment } from '../../api/payments';
+import { PrintReceiptActions } from '../receipts/PrintReceiptActions';
 import type { CreatePaymentInput, PaymentMethod } from '../../types/payment';
+import type { ReceiptPrintTarget } from '../../types/receipt';
 import { FormModal } from '../ui/FormModal';
 import '../../styles/forms.css';
 
@@ -15,6 +17,7 @@ type Props = {
   token: string;
   isSuperAdmin: boolean;
   preset?: PaymentFormPreset;
+  billingMonth?: string;
   onClose: () => void;
   onSaved: () => void;
   onError: (message: string) => void;
@@ -39,6 +42,7 @@ export function PaymentFormModal({
   open,
   token,
   preset,
+  billingMonth,
   onClose,
   onSaved,
   onError,
@@ -49,6 +53,10 @@ export function PaymentFormModal({
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [printTarget, setPrintTarget] = useState<ReceiptPrintTarget | null>(
+    null,
+  );
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -57,6 +65,8 @@ export function PaymentFormModal({
     setPaymentDate(todayDate());
     setReference('');
     setNotes('');
+    setPrintTarget(null);
+    setSaved(false);
   }, [open, preset]);
 
   async function handleSubmit(event: FormEvent) {
@@ -78,9 +88,14 @@ export function PaymentFormModal({
     };
     setSaving(true);
     try {
-      await createPayment(token, payload);
+      const payment = await createPayment(token, payload);
+      setSaved(true);
+      setPrintTarget({
+        sourceType: 'payment',
+        sourceId: payment.id,
+        billingMonth,
+      });
       onSaved();
-      onClose();
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Unable to record payment.');
     } finally {
@@ -88,69 +103,93 @@ export function PaymentFormModal({
     }
   }
 
+  function handleClose() {
+    if (saving) return;
+    onClose();
+  }
+
   return (
     <FormModal
       open={open}
-      title="Record Payment"
-      onClose={() => !saving && onClose()}
+      title={saved ? 'Payment Recorded' : 'Record Payment'}
+      onClose={handleClose}
     >
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <label className="form-field">
-          <span>Amount</span>
-          <input
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            required
-            autoFocus
+      {saved ? (
+        <>
+          <p className="form-hint">
+            Payment saved successfully. Print the bill now — works for half
+            payment and remaining pending. You can reprint later from the list.
+          </p>
+          <PrintReceiptActions
+            token={token}
+            target={printTarget}
+            onError={onError}
           />
-        </label>
-        <label className="form-field">
-          <span>Method</span>
-          <select
-            value={paymentMethod}
-            onChange={(event) =>
-              setPaymentMethod(event.target.value as PaymentMethod)
-            }
-          >
-            {METHODS.map((method) => (
-              <option key={method} value={method}>
-                {method.replaceAll('_', ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="form-field">
-          <span>Date</span>
-          <input
-            type="date"
-            value={paymentDate}
-            onChange={(event) => setPaymentDate(event.target.value)}
-            required
-          />
-        </label>
-        <label className="form-field">
-          <span>Reference</span>
-          <input
-            value={reference}
-            onChange={(event) => setReference(event.target.value)}
-          />
-        </label>
-        <label className="form-field">
-          <span>Notes</span>
-          <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
-        </label>
-        <div className="form-actions">
-          <button type="button" className="btn btn--ghost" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn--primary" disabled={saving}>
-            {saving ? 'Saving…' : 'Save Payment'}
-          </button>
-        </div>
-      </form>
+          <div className="form-actions">
+            <button type="button" className="btn btn--primary" onClick={handleClose}>
+              Done
+            </button>
+          </div>
+        </>
+      ) : (
+        <form className="form-grid" onSubmit={handleSubmit}>
+          <label className="form-field">
+            <span>Amount</span>
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              required
+              autoFocus
+            />
+          </label>
+          <label className="form-field">
+            <span>Method</span>
+            <select
+              value={paymentMethod}
+              onChange={(event) =>
+                setPaymentMethod(event.target.value as PaymentMethod)
+              }
+            >
+              {METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method.replaceAll('_', ' ')}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
+            <span>Date</span>
+            <input
+              type="date"
+              value={paymentDate}
+              onChange={(event) => setPaymentDate(event.target.value)}
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span>Reference</span>
+            <input
+              value={reference}
+              onChange={(event) => setReference(event.target.value)}
+            />
+          </label>
+          <label className="form-field">
+            <span>Notes</span>
+            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
+          </label>
+          <div className="form-actions">
+            <button type="button" className="btn btn--ghost" onClick={handleClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn--primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save Payment'}
+            </button>
+          </div>
+        </form>
+      )}
     </FormModal>
   );
 }

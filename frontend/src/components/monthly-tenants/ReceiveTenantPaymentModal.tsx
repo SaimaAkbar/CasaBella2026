@@ -4,6 +4,8 @@ import { recordElectricityPayment } from '../../api/electricity-readings';
 import { formatPkr } from '../../lib/format';
 import type { MonthlyTenancy } from '../../types/monthly-tenancy';
 import type { PaymentMethod } from '../../types/payment';
+import type { ReceiptPrintTarget } from '../../types/receipt';
+import { PrintReceiptActions } from '../receipts/PrintReceiptActions';
 import { FormModal } from '../ui/FormModal';
 import '../../styles/forms.css';
 
@@ -70,9 +72,13 @@ export function ReceiveTenantPaymentModal({
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [printTargets, setPrintTargets] = useState<ReceiptPrintTarget[]>([]);
 
   useEffect(() => {
     if (!open) return;
+    setSaved(false);
+    setPrintTargets([]);
     setApplyTo(defaultApply);
     setAmount(
       String(
@@ -132,8 +138,9 @@ export function ReceiveTenantPaymentModal({
 
     setSaving(true);
     try {
+      const targets: ReceiptPrintTarget[] = [];
       if (rentAmount > 0) {
-        await createPayment(token, {
+        const payment = await createPayment(token, {
           paymentForType: 'MONTHLY_TENANCY',
           monthlyTenancyId: tenancy.id,
           amount: rentAmount,
@@ -142,18 +149,30 @@ export function ReceiveTenantPaymentModal({
           transactionReference: reference.trim() || undefined,
           notes: notes.trim() || undefined,
         });
+        targets.push({
+          sourceType: 'payment',
+          sourceId: payment.id,
+          billingMonth: periodLabel,
+        });
       }
       if (electricityAmount > 0 && electricityReadingId) {
-        await recordElectricityPayment(token, electricityReadingId, {
+        const reading = await recordElectricityPayment(token, electricityReadingId, {
           amountPaid: electricityAmount,
           paymentDate: new Date(`${paymentDate}T12:00:00`).toISOString(),
           paymentMethod,
           transactionReference: reference.trim() || undefined,
           notes: notes.trim() || undefined,
         });
+        if (reading.expensePaymentId) {
+          targets.push({
+            sourceType: 'expense_payment',
+            sourceId: reading.expensePaymentId,
+          });
+        }
       }
+      setPrintTargets(targets);
+      setSaved(true);
       onSaved();
-      onClose();
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Unable to record payment.');
     } finally {
@@ -164,7 +183,32 @@ export function ReceiveTenantPaymentModal({
   const totalDue = rentOutstanding + (canPayElectricity ? electricityOutstanding : 0);
 
   return (
-    <FormModal open={open} title="Receive Payment" onClose={() => !saving && onClose()}>
+    <FormModal
+      open={open}
+      title={saved ? 'Payment Recorded' : 'Receive Payment'}
+      onClose={() => !saving && onClose()}
+    >
+      {saved ? (
+        <>
+          <p className="form-hint">
+            Payment saved successfully. Print bill below — half payment and
+            remaining pending are shown on the slip.
+          </p>
+          {printTargets.map((target) => (
+            <PrintReceiptActions
+              key={`${target.sourceType}-${target.sourceId}`}
+              token={token}
+              target={target}
+              onError={onError}
+            />
+          ))}
+          <div className="form-actions">
+            <button type="button" className="btn btn--primary" onClick={onClose}>
+              Done
+            </button>
+          </div>
+        </>
+      ) : (
       <form className="form-grid" onSubmit={handleSubmit}>
         <p className="form-hint">
           Tenant: <strong>{tenancy?.tenant?.fullName ?? '—'}</strong>
@@ -284,6 +328,7 @@ export function ReceiveTenantPaymentModal({
           </button>
         </div>
       </form>
+      )}
     </FormModal>
   );
 }

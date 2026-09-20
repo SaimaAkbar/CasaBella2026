@@ -1,6 +1,7 @@
 import { formatDate, formatLabel } from '../../lib/format';
 import type { MonthlyTenancy } from '../../types/monthly-tenancy';
 import { PaymentHistoryList } from '../payments/PaymentHistoryList';
+import { PrintLatestReceiptButton } from '../receipts/PrintLatestReceiptButton';
 import { FormModal } from '../ui/FormModal';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
 import { OccupancyBadge } from '../ui/OccupancyBadge';
@@ -20,6 +21,7 @@ type TenancyDetailModalProps = {
   canAddPayment?: boolean;
   paymentRefreshKey?: number;
   onAddPayment?: () => void;
+  onReprintError?: (message: string) => void;
   onClose: () => void;
   onMarkEmpty: () => void;
   onMarkOccupied: () => void;
@@ -39,6 +41,7 @@ export function TenancyDetailModal({
   canAddPayment = false,
   paymentRefreshKey = 0,
   onAddPayment,
+  onReprintError,
   onClose,
   onMarkEmpty,
   onMarkOccupied,
@@ -256,10 +259,19 @@ export function TenancyDetailModal({
           canAddPayment={canAddPayment}
           onAddPayment={onAddPayment}
           refreshKey={paymentRefreshKey}
+          onReprintError={onReprintError}
         />
       ) : null}
 
       <div className="form-actions" style={{ flexWrap: 'wrap' }}>
+        {token ? (
+          <PrintLatestReceiptButton
+            token={token}
+            monthlyTenancyId={tenancy.id}
+            className="btn btn--primary"
+            onError={onReprintError}
+          />
+        ) : null}
         {canMarkOccupancy && isActive && tenancy.occupancyState === 'OCCUPIED' ? (
           <button
             type="button"

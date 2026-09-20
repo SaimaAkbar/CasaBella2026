@@ -44,6 +44,13 @@ export const APP_NAV_ITEMS: NavItem[] = [
     breadcrumb: ['Home', 'Daily Guests'],
   },
   {
+    id: 'online-bookings',
+    label: 'Online Bookings',
+    path: '/online-bookings',
+    title: 'Online Bookings',
+    breadcrumb: ['Home', 'Online Bookings'],
+  },
+  {
     id: 'payments',
     label: 'Payments',
     path: '/payments',
@@ -145,7 +152,6 @@ export const SUPER_ADMIN_ONLY_PATHS = [
   '/backups',
   '/owners',
   '/employees',
-  '/payments',
   '/inventory',
   '/audit-logs',
   '/settings',
@@ -176,6 +182,7 @@ export function resolveNotificationTarget(
   const mod = item.relatedModule;
   if (mod === 'APPROVALS') return staffSafePath('/approvals', role);
   if (mod === 'BOOKINGS') return '/daily-guests';
+  if (mod === 'ONLINE_BOOKING') return '/online-bookings';
   if (mod === 'INVENTORY') return staffSafePath('/inventory', role);
   if (mod === 'ELECTRICITY') return '/expenses';
   if (mod === 'MONTHLY_TENANTS') return '/monthly-tenants';

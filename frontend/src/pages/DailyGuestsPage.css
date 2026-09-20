@@ -107,3 +107,23 @@
   white-space: normal;
   vertical-align: top;
 }
+
+.daily-guests-page__guest-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.daily-guests-page__online-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #1f6f4a 18%, #fff);
+  border: 1px solid color-mix(in srgb, #1f6f4a 45%, #fff);
+  color: #145a3a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

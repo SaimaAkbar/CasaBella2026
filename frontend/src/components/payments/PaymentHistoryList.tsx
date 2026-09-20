@@ -5,6 +5,7 @@ import {
 } from '../../api/payments';
 import { formatLabel, formatPkr } from '../../lib/format';
 import type { Payment } from '../../types/payment';
+import { ReprintReceiptButton } from '../receipts/ReprintReceiptButton';
 import { DateTimeDisplay } from '../ui/DateTimeDisplay';
 import { LoadingState } from '../ui/LoadingState';
 
@@ -14,7 +15,9 @@ type PaymentHistoryListProps = {
   monthlyTenancyId?: string;
   onAddPayment?: () => void;
   canAddPayment?: boolean;
+  canReprint?: boolean;
   refreshKey?: number;
+  onReprintError?: (message: string) => void;
 };
 
 export function PaymentHistoryList({
@@ -23,7 +26,9 @@ export function PaymentHistoryList({
   monthlyTenancyId,
   onAddPayment,
   canAddPayment = false,
+  canReprint = true,
   refreshKey = 0,
+  onReprintError,
 }: PaymentHistoryListProps) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,11 +65,24 @@ export function PaymentHistoryList({
     <div className="payment-history">
       <div className="payment-history__header">
         <h3>Payment History</h3>
-        {canAddPayment && onAddPayment ? (
-          <button type="button" className="btn btn--ghost" onClick={onAddPayment}>
-            Add Payment
-          </button>
-        ) : null}
+        <div className="payment-history__header-actions">
+          {canReprint && payments.length > 0 ? (
+            <ReprintReceiptButton
+              token={token}
+              target={{
+                sourceType: 'payment',
+                sourceId: payments[payments.length - 1].id,
+              }}
+              label="Print Latest Receipt"
+              onError={onReprintError}
+            />
+          ) : null}
+          {canAddPayment && onAddPayment ? (
+            <button type="button" className="btn btn--ghost" onClick={onAddPayment}>
+              Add Payment
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {loading ? <LoadingState message="Loading payments…" /> : null}
@@ -85,6 +103,7 @@ export function PaymentHistoryList({
               <th>Method</th>
               <th>Amount</th>
               <th>Status</th>
+              {canReprint ? <th>Receipt</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -98,6 +117,15 @@ export function PaymentHistoryList({
                 <td>{formatLabel(payment.paymentMethod)}</td>
                 <td>{formatPkr(payment.amount)}</td>
                 <td>{formatLabel(payment.status)}</td>
+                {canReprint ? (
+                  <td>
+                    <ReprintReceiptButton
+                      token={token}
+                      target={{ sourceType: 'payment', sourceId: payment.id }}
+                      onError={onReprintError}
+                    />
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>

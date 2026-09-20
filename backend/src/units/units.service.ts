@@ -61,6 +61,16 @@ export class UnitsService {
           hourlyRate: this.toDecimal(createUnitDto.hourlyRate),
           status: createUnitDto.status,
           notes: createUnitDto.notes,
+          displayName: createUnitDto.displayName?.trim() || null,
+          description: createUnitDto.description?.trim() || null,
+          maxGuests: createUnitDto.maxGuests,
+          bedConfiguration: createUnitDto.bedConfiguration?.trim() || null,
+          ...(createUnitDto.amenitiesText !== undefined
+            ? { amenities: this.parseAmenities(createUnitDto.amenitiesText) }
+            : {}),
+          ...(createUnitDto.imageUrl !== undefined
+            ? { imageUrls: this.parseImageUrls(createUnitDto.imageUrl) }
+            : {}),
           isActive: createUnitDto.isActive,
         },
       });
@@ -208,6 +218,27 @@ export class UnitsService {
             : undefined,
         status: updateUnitDto.status,
         notes: updateUnitDto.notes,
+        displayName:
+          updateUnitDto.displayName !== undefined
+            ? updateUnitDto.displayName.trim() || null
+            : undefined,
+        description:
+          updateUnitDto.description !== undefined
+            ? updateUnitDto.description.trim() || null
+            : undefined,
+        maxGuests: updateUnitDto.maxGuests,
+        bedConfiguration:
+          updateUnitDto.bedConfiguration !== undefined
+            ? updateUnitDto.bedConfiguration.trim() || null
+            : undefined,
+        amenities:
+          updateUnitDto.amenitiesText !== undefined
+            ? this.parseAmenities(updateUnitDto.amenitiesText)
+            : undefined,
+        imageUrls:
+          updateUnitDto.imageUrl !== undefined
+            ? this.parseImageUrls(updateUnitDto.imageUrl)
+            : undefined,
         isActive: updateUnitDto.isActive,
       };
     }
@@ -235,6 +266,29 @@ export class UnitsService {
     }
 
     if (Object.keys(data).length === 0) {
+      // Still allow website marketing fields for Admin.
+    }
+
+    if (updateUnitDto.displayName !== undefined) {
+      data.displayName = updateUnitDto.displayName.trim() || null;
+    }
+    if (updateUnitDto.description !== undefined) {
+      data.description = updateUnitDto.description.trim() || null;
+    }
+    if (updateUnitDto.maxGuests !== undefined) {
+      data.maxGuests = updateUnitDto.maxGuests;
+    }
+    if (updateUnitDto.bedConfiguration !== undefined) {
+      data.bedConfiguration = updateUnitDto.bedConfiguration.trim() || null;
+    }
+    if (updateUnitDto.amenitiesText !== undefined) {
+      data.amenities = this.parseAmenities(updateUnitDto.amenitiesText);
+    }
+    if (updateUnitDto.imageUrl !== undefined) {
+      data.imageUrls = this.parseImageUrls(updateUnitDto.imageUrl);
+    }
+
+    if (Object.keys(data).length === 0) {
       throw new ForbiddenException(
         'Admins can only update operational unit fields',
       );
@@ -249,6 +303,18 @@ export class UnitsService {
     }
 
     return new Prisma.Decimal(value);
+  }
+
+  private parseAmenities(text: string): string[] {
+    return text
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+
+  private parseImageUrls(imageUrl: string): string[] {
+    const trimmed = imageUrl.trim();
+    return trimmed ? [trimmed] : [];
   }
 
   private serializeUnit<T extends Unit>(unit: T): SerializedUnit & T {

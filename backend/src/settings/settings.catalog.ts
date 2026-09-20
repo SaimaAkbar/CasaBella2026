@@ -40,7 +40,7 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     category: SettingCategory.BUSINESS,
     dataType: SettingDataType.STRING,
     description: 'Hotel / business name',
-    defaultValue: 'Hotel Residences',
+    defaultValue: 'Casa Bella',
     isPublic: true,
   },
   {
@@ -48,7 +48,7 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     category: SettingCategory.BUSINESS,
     dataType: SettingDataType.STRING,
     description: 'Short business name',
-    defaultValue: 'HR POS',
+    defaultValue: 'Casa Bella',
     isPublic: true,
   },
   {
@@ -282,7 +282,21 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
   ),
   numbering('numbering.roomAsset', 'AST', 'Room asset number format'),
   numbering('numbering.approval', 'APR', 'Approval request number format'),
-  numbering('numbering.receipt', 'RCP', 'Receipt number format'),
+  {
+    key: 'numbering.receipt',
+    category: SettingCategory.NUMBERING,
+    dataType: SettingDataType.JSON,
+    description: 'Receipt number format',
+    defaultValue: JSON.stringify({
+      prefix: 'RC',
+      separator: '-',
+      includeYear: true,
+      includeMonth: false,
+      sequenceLength: 6,
+      resetYearly: true,
+      resetMonthly: false,
+    }),
+  },
   numbering('numbering.invoice', 'INVOC', 'Invoice number format'),
   numbering('numbering.backup', 'BKP', 'Backup number format'),
 
@@ -456,6 +470,39 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     dataType: SettingDataType.NUMBER,
     description: 'Require proof attachment above amount',
     defaultValue: '0',
+  },
+  {
+    key: 'payment.bankAccountName',
+    category: SettingCategory.PAYMENT,
+    dataType: SettingDataType.STRING,
+    description: 'Public bank account name for website transfers',
+    defaultValue: 'CASA BELLA',
+    isPublic: true,
+  },
+  {
+    key: 'payment.bankIban',
+    category: SettingCategory.PAYMENT,
+    dataType: SettingDataType.STRING,
+    description: 'Public IBAN for website bank transfers',
+    defaultValue: 'PK60FAYS3203301000003409',
+    isPublic: true,
+  },
+  {
+    key: 'payment.bankBranch',
+    category: SettingCategory.PAYMENT,
+    dataType: SettingDataType.STRING,
+    description: 'Public bank branch for website transfers',
+    defaultValue: 'IBB E-11, ISLAMABAD',
+    isPublic: true,
+  },
+  {
+    key: 'payment.bankInstructions',
+    category: SettingCategory.PAYMENT,
+    dataType: SettingDataType.STRING,
+    description: 'Customer instructions for bank transfer',
+    defaultValue:
+      'Please transfer the selected amount to the Casa Bella bank account using the details provided. After completing the transfer, submit your transaction details. Our team will verify your payment against our bank records and confirm your reservation once the payment has been successfully verified.',
+    isPublic: true,
   },
 
   // Expense
@@ -667,6 +714,39 @@ export const SETTINGS_CATALOG: SettingDefinition[] = [
     description: 'Backup retention days for cleanup',
     defaultValue: '30',
     isSensitive: true,
+  },
+  // Thermal receipt printer (direct Windows RAW print on reception PC)
+  {
+    key: 'hardware.receiptPrinterName',
+    category: SettingCategory.SYSTEM,
+    dataType: SettingDataType.STRING,
+    description: 'Speed X SP 200 / POS-80 USB thermal receipt printer name',
+    defaultValue: 'POS-80',
+    isPublic: true,
+  },
+  {
+    key: 'hardware.receiptPaperWidthMm',
+    category: SettingCategory.SYSTEM,
+    dataType: SettingDataType.NUMBER,
+    description: 'Receipt paper width in millimeters',
+    defaultValue: '80',
+    isPublic: true,
+  },
+  {
+    key: 'hardware.receiptPrintWidthMm',
+    category: SettingCategory.SYSTEM,
+    dataType: SettingDataType.NUMBER,
+    description: 'Receipt printable width in millimeters',
+    defaultValue: '72',
+    isPublic: true,
+  },
+  {
+    key: 'hardware.receiptAutoCut',
+    category: SettingCategory.SYSTEM,
+    dataType: SettingDataType.BOOLEAN,
+    description: 'Enable partial auto-cut after printing',
+    defaultValue: 'true',
+    isPublic: true,
   },
 ];
 

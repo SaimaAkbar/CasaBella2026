@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { fetchProperties } from '../api/properties';
 import {
   archiveUnit,
   createUnit,
   fetchUnits,
   updateUnit,
+  uploadUnitImage,
 } from '../api/units';
 import { PageHeader } from '../components/PageHeader';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -52,12 +53,28 @@ const emptyForm = (): UnitFormValues => ({
   hourlyRate: '',
   status: 'AVAILABLE',
   notes: '',
+  displayName: '',
+  description: '',
+  maxGuests: '',
+  bedConfiguration: '',
+  amenitiesText: '',
+  imageUrl: '',
   isActive: true,
 });
 
 function toOptionalNumber(value: string): number | undefined {
   if (value.trim() === '') return undefined;
   return Number(value);
+}
+
+function resolveUnitImagePreview(url: string): string {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  const api = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+  if (!api) return url;
+  return url.startsWith('/') ? `${api}${url}` : `${api}/${url}`;
 }
 
 export function UnitsPage() {
@@ -88,8 +105,10 @@ export function UnitsPage() {
     Partial<Record<keyof UnitFormValues, string>>
   >({});
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<Unit | null>(null);
   const [archiving, setArchiving] = useState(false);
+  const imageFileRef = useRef<HTMLInputElement>(null);
 
   const canCreate = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
   const canEdit = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
@@ -149,6 +168,13 @@ export function UnitsPage() {
 
   function openEdit(unit: Unit) {
     setSelected(unit);
+    const amenities = Array.isArray(unit.amenities)
+      ? unit.amenities.join(', ')
+      : '';
+    const imageUrl =
+      Array.isArray(unit.imageUrls) && unit.imageUrls[0]
+        ? String(unit.imageUrls[0])
+        : '';
     setForm({
       propertyId: unit.propertyId,
       unitNumber: unit.unitNumber,
@@ -160,6 +186,12 @@ export function UnitsPage() {
       hourlyRate: unit.hourlyRate ?? '',
       status: unit.status,
       notes: unit.notes ?? '',
+      displayName: unit.displayName ?? '',
+      description: unit.description ?? '',
+      maxGuests: unit.maxGuests?.toString() ?? '',
+      bedConfiguration: unit.bedConfiguration ?? '',
+      amenitiesText: amenities,
+      imageUrl,
       isActive: unit.isActive,
     });
     setFieldErrors({});
@@ -206,6 +238,12 @@ export function UnitsPage() {
       hourlyRate: toOptionalNumber(values.hourlyRate),
       status: values.status,
       notes: values.notes.trim() || undefined,
+      displayName: values.displayName.trim() || undefined,
+      description: values.description.trim() || undefined,
+      maxGuests: toOptionalNumber(values.maxGuests),
+      bedConfiguration: values.bedConfiguration.trim() || undefined,
+      amenitiesText: values.amenitiesText.trim() || undefined,
+      imageUrl: values.imageUrl.trim() || undefined,
       isActive: values.isActive,
     };
   }
@@ -235,6 +273,12 @@ export function UnitsPage() {
                 hourlyRate: payload.hourlyRate,
                 status: payload.status,
                 notes: payload.notes,
+                displayName: payload.displayName,
+                description: payload.description,
+                maxGuests: payload.maxGuests,
+                bedConfiguration: payload.bedConfiguration,
+                amenitiesText: payload.amenitiesText,
+                imageUrl: payload.imageUrl,
               }
             : payload;
 
@@ -252,6 +296,38 @@ export function UnitsPage() {
       });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleImageUpload(file: File | null | undefined) {
+    if (!token || !file || uploadingImage) return;
+
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      setToast({
+        message: 'Please choose a JPG, PNG, or WEBP image.',
+        tone: 'error',
+      });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setToast({ message: 'Image must be 5MB or smaller.', tone: 'error' });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const result = await uploadUnitImage(token, file);
+      setForm((prev) => ({ ...prev, imageUrl: result.url }));
+      setToast({ message: 'Image uploaded.', tone: 'success' });
+    } catch (err) {
+      setToast({
+        message: handleApiError(err, 'Unable to upload image.'),
+        tone: 'error',
+      });
+    } finally {
+      setUploadingImage(false);
+      if (imageFileRef.current) imageFileRef.current.value = '';
     }
   }
 
@@ -624,6 +700,107 @@ export function UnitsPage() {
               value={form.notes}
               onChange={(event) =>
                 setForm({ ...form, notes: event.target.value })
+              }
+            />
+          </label>
+
+          <p className="form-section-title">Website listing (public)</p>
+          <div className="form-grid form-grid--2">
+            <label className="form-field">
+              <span>Display name</span>
+              <input
+                value={form.displayName}
+                placeholder="e.g. Executive Suite"
+                onChange={(event) =>
+                  setForm({ ...form, displayName: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Max guests</span>
+              <input
+                type="number"
+                min={1}
+                value={form.maxGuests}
+                onChange={(event) =>
+                  setForm({ ...form, maxGuests: event.target.value })
+                }
+              />
+            </label>
+            <label className="form-field">
+              <span>Bed configuration</span>
+              <input
+                value={form.bedConfiguration}
+                placeholder="e.g. King bed"
+                onChange={(event) =>
+                  setForm({ ...form, bedConfiguration: event.target.value })
+                }
+              />
+            </label>
+            <div className="form-field">
+              <span>Website image</span>
+              <input
+                ref={imageFileRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                hidden
+                onChange={(event) =>
+                  void handleImageUpload(event.target.files?.[0])
+                }
+              />
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  disabled={uploadingImage || saving}
+                  onClick={() => imageFileRef.current?.click()}
+                >
+                  {uploadingImage ? 'Uploading…' : form.imageUrl ? 'Change image' : 'Upload image'}
+                </button>
+                {form.imageUrl ? (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={uploadingImage || saving}
+                    onClick={() => setForm({ ...form, imageUrl: '' })}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+              <p className="form-hint">JPG, PNG, or WEBP · max 5MB</p>
+              {form.imageUrl ? (
+                <img
+                  src={resolveUnitImagePreview(form.imageUrl)}
+                  alt="Unit website preview"
+                  style={{
+                    marginTop: '0.5rem',
+                    maxWidth: '100%',
+                    maxHeight: 160,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    border: '1px solid var(--border-color, #ddd)',
+                  }}
+                />
+              ) : null}
+            </div>
+          </div>
+          <label className="form-field">
+            <span>Website description</span>
+            <textarea
+              value={form.description}
+              onChange={(event) =>
+                setForm({ ...form, description: event.target.value })
+              }
+            />
+          </label>
+          <label className="form-field">
+            <span>Facilities (comma-separated)</span>
+            <input
+              value={form.amenitiesText}
+              placeholder="WiFi, AC, TV, Kitchen"
+              onChange={(event) =>
+                setForm({ ...form, amenitiesText: event.target.value })
               }
             />
           </label>

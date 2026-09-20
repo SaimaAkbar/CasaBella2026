@@ -14,6 +14,8 @@ import {
   Role,
 } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReceiptNumberService } from '../receipts/receipt-number.service';
+import { ReceiptsService } from '../receipts/receipts.service';
 import { AdjustmentPaymentDto } from './dto/adjustment-payment.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { QueryPaymentsDto } from './dto/query-payments.dto';
@@ -61,7 +63,10 @@ const paymentInclude = {
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly receiptNumbers: ReceiptNumberService,
+  ) {}
 
   async create(dto: CreatePaymentDto, role: Role, userId: string) {
     this.assertCanRecord(role);
@@ -88,6 +93,7 @@ export class PaymentsService {
       }
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const notes =
         amount.greaterThan(remaining) && dto.overpayReason
           ? `${dto.notes?.trim() ? `${dto.notes.trim()}; ` : ''}OVERPAY_REASON:${dto.overpayReason.trim()}`
@@ -96,6 +102,7 @@ export class PaymentsService {
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: dto.paymentForType,
           bookingId: dto.bookingId,
           monthlyTenancyId: dto.monthlyTenancyId,
@@ -401,9 +408,11 @@ export class PaymentsService {
       }
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: original.paymentForType,
           bookingId: original.bookingId,
           monthlyTenancyId: original.monthlyTenancyId,
@@ -491,9 +500,11 @@ export class PaymentsService {
       }
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: original.paymentForType,
           bookingId: original.bookingId,
           monthlyTenancyId: original.monthlyTenancyId,
@@ -552,9 +563,11 @@ export class PaymentsService {
       await this.loadSourceForUpdate(tx, dto);
 
       const paymentNumber = await this.nextPaymentNumber(tx);
+      const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
       const created = await tx.payment.create({
         data: {
           paymentNumber,
+          receiptNumber,
           paymentForType: dto.paymentForType,
           bookingId: dto.bookingId,
           monthlyTenancyId: dto.monthlyTenancyId,
@@ -614,9 +627,11 @@ export class PaymentsService {
     }
 
     const paymentNumber = await this.nextPaymentNumber(tx);
+    const receiptNumber = await this.receiptNumbers.nextReceiptNumber(tx);
     return tx.payment.create({
       data: {
         paymentNumber,
+        receiptNumber,
         paymentForType: input.paymentForType,
         bookingId: input.bookingId,
         monthlyTenancyId: input.monthlyTenancyId,

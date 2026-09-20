@@ -23,13 +23,26 @@ const MUTE_PREFIXES = [
 ];
 
 /** Desk operations that must apply immediately (cash in hand / occupancy). */
-const IMMEDIATE_POST_EXACT = new Set(['/payments', '/bookings', '/guests']);
+const IMMEDIATE_POST_EXACT = new Set([
+  '/payments',
+  '/bookings',
+  '/guests',
+  '/units/upload-image',
+]);
 
 const IMMEDIATE_POST_SUFFIXES = [
   '/check-in',
   '/check-out',
   '/record-payment',
+  '/cancel',
+  '/no-show',
 ];
+
+/** Online bank-transfer verification must apply as soon as staff confirms the bank. */
+function isImmediateOnlineBankTransferPost(route: string): boolean {
+  if (!route.startsWith('/online-bookings/payments/')) return false;
+  return route.endsWith('/verify') || route.endsWith('/reject');
+}
 
 const UUID_RE =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -103,6 +116,10 @@ export function shouldQueueStaffMutation(
   }
 
   if (verb === 'POST' && isImmediateStaffPost(route)) {
+    return false;
+  }
+
+  if (verb === 'POST' && isImmediateOnlineBankTransferPost(route)) {
     return false;
   }
 

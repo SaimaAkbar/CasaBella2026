@@ -813,7 +813,7 @@ export class ElectricityReadingsService implements OnModuleInit {
     }
 
     const method = this.parsePaymentMethod(dto.paymentMethod);
-    return this.expensesService.recordPayment(
+    const paymentResult = await this.expensesService.recordPayment(
       reading.expenseId,
       {
         amountPaid: dto.amountPaid,
@@ -824,10 +824,13 @@ export class ElectricityReadingsService implements OnModuleInit {
         notes: dto.notes,
       },
       user,
-    ).then(async () => {
-      const refreshed = await this.getReadingOrThrow(id);
-      return mapElectricityReading(await this.applyPendingFine(refreshed));
-    });
+    );
+    const refreshed = await this.getReadingOrThrow(id);
+    const mapped = mapElectricityReading(await this.applyPendingFine(refreshed));
+    return {
+      ...mapped,
+      expensePaymentId: paymentResult.expensePaymentId,
+    };
   }
 
   async findAll(query: QueryElectricityReadingsDto, role: Role) {

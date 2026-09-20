@@ -20,6 +20,7 @@ import type {
 import '../styles/forms.css';
 import './SettingsPage.css';
 import { UsersManagement } from '../components/settings/UsersManagement';
+import { PrinterSettingsPanel } from '../components/settings/PrinterSettingsPanel';
 
 type TabDef = {
   id: SettingCategory;
@@ -37,6 +38,7 @@ const TABS: TabDef[] = [
   { id: 'EXPENSE', label: 'Expenses' },
   { id: 'SECURITY', label: 'Security' },
   { id: 'APPEARANCE', label: 'Appearance' },
+  { id: 'SYSTEM', label: 'Receipt Printer' },
 ];
 
 const COLOR_LABELS: Array<{ key: keyof DashboardColors; label: string }> = [
@@ -83,7 +85,7 @@ export function SettingsPage() {
   const visibleTabs = useMemo(
     () =>
       TABS.filter((item) => {
-        if (item.id === 'SECURITY') return isSuperAdmin;
+        if (item.id === 'SECURITY' || item.id === 'SYSTEM') return isSuperAdmin;
         return true;
       }),
     [isSuperAdmin],
@@ -234,6 +236,12 @@ export function SettingsPage() {
 
       {!isLoading && !error ? (
         <div className="settings-panel module-form">
+          {tab === 'SYSTEM' && token && isSuperAdmin ? (
+            <PrinterSettingsPanel
+              token={token}
+              onToast={(message, tone) => setToast({ message, tone })}
+            />
+          ) : null}
           {tab === 'ELECTRICITY' ? (
             <div className="settings-preview">
               <strong>Formula preview</strong>
@@ -279,8 +287,11 @@ export function SettingsPage() {
             </p>
           ) : null}
 
+          {tab !== 'SYSTEM' ? (
           <div className="module-form__grid">
-            {rows.map((row) => {
+            {rows
+              .filter((row) => !row.key.startsWith('hardware.receipt'))
+              .map((row) => {
               if (row.key === 'dashboard.colors') return null;
 
               if (isNumbering(row.value) || row.dataType === 'JSON') {
@@ -388,6 +399,7 @@ export function SettingsPage() {
               );
             })}
           </div>
+          ) : null}
         </div>
       ) : null}
 

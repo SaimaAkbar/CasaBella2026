@@ -26,6 +26,9 @@ type PaymentRecord = {
   createdByUserId: string;
   approvedByUserId: string | null;
   approvedAt: Date | null;
+  receiptNumber: string | null;
+  lastPrintedAt: Date | null;
+  printCount: number;
   createdAt: Date;
   updatedAt: Date;
   booking?: {
@@ -158,6 +161,7 @@ export function buildReceipt(payment: PaymentRecord) {
     : new Prisma.Decimal(0);
 
   return {
+    receiptNumber: payment.receiptNumber ?? payment.paymentNumber,
     hotelOrPropertyName: propertyName,
     paymentNumber: payment.paymentNumber,
     paymentDateTime: payment.paymentDate,

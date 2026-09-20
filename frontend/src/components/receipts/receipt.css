@@ -1,0 +1,178 @@
+.receipt-preview {
+  width: 72mm;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.75rem 0.5rem;
+  background: #fff;
+  color: #111;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  border: 1px dashed #bbb;
+  box-shadow: inset 0 0 0 1px #eee;
+}
+
+.receipt-preview__reprint {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.receipt-preview__center {
+  text-align: center;
+}
+
+.receipt-preview__title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.receipt-preview__separator {
+  border-top: 1px dashed #999;
+  margin: 0.45rem 0;
+}
+
+.receipt-preview__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.receipt-preview__status {
+  text-align: center;
+  font-weight: 700;
+  margin: 0.35rem 0;
+}
+
+.receipt-preview__status--paid {
+  color: #15803d;
+}
+
+.receipt-preview__status--partial {
+  color: #b45309;
+}
+
+.printer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-bg, #fff);
+}
+
+.printer-status__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.printer-status--ready .printer-status__dot {
+  background: #22c55e;
+}
+
+.printer-status--disconnected .printer-status__dot {
+  background: #eab308;
+}
+
+.printer-status--error .printer-status__dot {
+  background: #ef4444;
+}
+
+.printer-status-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.printer-status-help {
+  max-width: 22rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.printer-status-help ol {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.printer-status-help__lead {
+  margin: 0;
+}
+
+.printer-status-help__note {
+  margin: 0.55rem 0 0;
+  color: #92400e;
+}
+
+.printer-status-help__error {
+  margin: 0.45rem 0 0;
+  color: #b91c1c;
+}
+
+.printer-settings__warning {
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid #fcd34d;
+  border-radius: 0.45rem;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.printer-settings {
+  display: grid;
+  gap: 1rem;
+}
+
+.printer-settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.payment-history__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.payment-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.print-receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.print-receipt-actions__message {
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.print-receipt-actions__error {
+  width: 100%;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { OnlineBookingAlert } from '../components/OnlineBookingAlert';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import './AppLayout.css';
@@ -58,6 +59,8 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+
+      <OnlineBookingAlert />
     </div>
   );
 }
